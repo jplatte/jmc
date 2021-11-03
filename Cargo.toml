@@ -1,0 +1,23 @@
+[package]
+name = "jmc"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["native-tls"]
+native-tls = ["matrix-sdk/native-tls"]
+rustls-tls = ["matrix-sdk/rustls-tls"]
+
+[dependencies]
+druid = { git = "https://github.com/jplatte/druid.git", branch = "hacky-password-support" }
+tracing-subscriber = "0.3.1"
+
+[dependencies.matrix-sdk]
+git = "https://github.com/matrix-org/matrix-rust-sdk"
+default-features = false
+features = [
+    "encryption",
+    "sled_cryptostore",
+    "sled_state_store",
+    "require_auth_for_profile_requests",
+]
