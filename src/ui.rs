@@ -33,8 +33,9 @@ pub(crate) fn build_ui() -> impl Widget<AppState> {
                 .boxed(),
         },
     )
-    .on_command(FINISH_LOGIN, |_ctx, _, state| {
+    .on_command(FINISH_LOGIN, |ctx, _, state| {
         *state = AppState::LoggedIn(UserState {});
+        ctx.set_handled();
     })
 }
 
