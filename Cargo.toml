@@ -11,6 +11,7 @@ rustls-tls = ["matrix-sdk/rustls-tls"]
 [dependencies]
 druid = { git = "https://github.com/jplatte/druid.git", branch = "hacky-password-support" }
 tracing-subscriber = "0.3.1"
+tracing = "0.1.29"
 
 [dependencies.matrix-sdk]
 git = "https://github.com/matrix-org/matrix-rust-sdk"
