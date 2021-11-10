@@ -9,7 +9,8 @@ native-tls = ["matrix-sdk/native-tls"]
 rustls-tls = ["matrix-sdk/rustls-tls"]
 
 [dependencies]
-druid = { git = "https://github.com/jplatte/druid.git", branch = "hacky-password-support" }
+druid = { git = "https://github.com/linebender/druid" }
+druid-widget-nursery = { git = "https://github.com/linebender/druid-widget-nursery" }
 tracing-subscriber = "0.3.1"
 tracing = "0.1.29"
 
@@ -22,3 +23,7 @@ features = [
     "sled_state_store",
     "require_auth_for_profile_requests",
 ]
+
+[patch."https://github.com/linebender/druid".druid]
+git = "https://github.com/jplatte/druid"
+branch = "hacky-password-support"

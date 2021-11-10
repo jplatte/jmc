@@ -2,9 +2,10 @@ use std::mem;
 
 use druid::{
     lens,
-    widget::{Align, Controller, Flex, Label, Padding, TextBox, ViewSwitcher},
-    Event, Widget, WidgetExt,
+    widget::{Align, Flex, Label, Padding, TextBox, ViewSwitcher},
+    Widget, WidgetExt as _,
 };
+use druid_widget_nursery::WidgetExt as _;
 
 use crate::{AppState, LoginState, UserState, FINISH_LOGIN};
 
@@ -32,27 +33,9 @@ pub(crate) fn build_ui() -> impl Widget<AppState> {
                 .boxed(),
         },
     )
-    .controller(FinishLogin)
-}
-
-// Dummy event name
-struct FinishLogin;
-
-impl<W: Widget<AppState>> Controller<AppState, W> for FinishLogin {
-    fn event(
-        &mut self,
-        _child: &mut W,
-        _ctx: &mut druid::EventCtx,
-        event: &Event,
-        data: &mut AppState,
-        _env: &druid::Env,
-    ) {
-        if let Event::Command(cmd) = event {
-            if cmd.is(FINISH_LOGIN) {
-                *data = AppState::LoggedIn(UserState {});
-            }
-        }
-    }
+    .on_command(FINISH_LOGIN, |_ctx, _, state| {
+        *state = AppState::LoggedIn(UserState {});
+    })
 }
 
 fn login_screen() -> impl Widget<LoginState> {
