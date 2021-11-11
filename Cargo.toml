@@ -21,8 +21,11 @@ features = [
     "encryption",
     "sled_cryptostore",
     "sled_state_store",
-    "require_auth_for_profile_requests",
 ]
+
+[patch.crates-io.futures-locks]
+git = "https://github.com/jplatte/futures-locks"
+branch = "tmp"
 
 [patch."https://github.com/linebender/druid".druid]
 git = "https://github.com/jplatte/druid"
