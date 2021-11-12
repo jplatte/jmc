@@ -13,7 +13,7 @@ druid = { git = "https://github.com/linebender/druid" }
 druid-widget-nursery = { git = "https://github.com/linebender/druid-widget-nursery" }
 tracing-subscriber = "0.3.1"
 tracing = "0.1.29"
-tokio = { version = "1.13.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.13.0", features = ["rt-multi-thread"] }
 
 [dependencies.matrix-sdk]
 git = "https://github.com/matrix-org/matrix-rust-sdk"
