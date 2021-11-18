@@ -50,6 +50,9 @@ fn login_screen() -> impl Widget<AppState> {
 
 fn main_ui() -> impl Widget<AppState> {
     Split::columns(rooms_sidebar(), room_view())
+        .min_size(42.0, 400.0)
+        .split_point(0.0)
+        .bar_size(0.0)
 }
 
 fn rooms_sidebar() -> impl Widget<AppState> {
