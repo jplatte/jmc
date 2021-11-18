@@ -1,7 +1,7 @@
 pub mod actions;
 
 use druid::{
-    widget::{Align, Button, Flex, Label, Padding, TextBox, ViewSwitcher},
+    widget::{Align, Button, Flex, Label, Padding, Split, TextBox, ViewSwitcher},
     LensExt as _, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
@@ -49,5 +49,13 @@ fn login_screen() -> impl Widget<AppState> {
 }
 
 fn main_ui() -> impl Widget<AppState> {
-    Label::new("Logged in.")
+    Split::columns(rooms_sidebar(), room_view())
+}
+
+fn rooms_sidebar() -> impl Widget<AppState> {
+    Label::new("S\nI\nD\nE\nB\nA\nR")
+}
+
+fn room_view() -> impl Widget<AppState> {
+    Label::new("<room view>")
 }
