@@ -1328,9 +1328,11 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 name = "jmc"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "druid",
  "druid-widget-nursery",
  "matrix-sdk",
+ "task-group",
  "tokio",
  "tracing",
  "tracing-subscriber 0.3.1",
@@ -2706,6 +2708,15 @@ dependencies = [
  "thiserror",
  "toml",
  "version-compare",
+]
+
+[[package]]
+name = "task-group"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b1f3bc29b7364b729d029b3db5b1e921cf6f43c074037e0b7a9f2ef45c18a4d"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]
