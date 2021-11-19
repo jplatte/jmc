@@ -3,15 +3,16 @@ use std::ops::ControlFlow;
 use anyhow::bail;
 use druid::Target;
 use matrix_sdk::{
+    config::ClientConfig as MatrixClientConfig,
     ruma::{api::client::r0::session::login::Response as LoginResponse, UserId},
     Client as MatrixClient, Session,
 };
 use task_group::TaskGroup;
-use tokio::{sync::mpsc::Receiver, task};
+use tokio::{fs, sync::mpsc::Receiver, task};
 use tracing::error;
 
 use crate::{
-    config::{self, Config},
+    config::{self, Config, CONFIG_DIR_PATH},
     data::LoginState,
     ui::actions::{UserData, FINISH_LOGIN},
 };
@@ -28,6 +29,11 @@ pub async fn main(
     mut login_rx: Receiver<LoginState>,
     event_sink: druid::ExtEventSink,
 ) {
+    if let Err(e) = fs::create_dir_all(&*CONFIG_DIR_PATH).await {
+        error!("Failed to create store directory: {}", e);
+        return;
+    }
+
     let mut state = if let Some(session) = config.session {
         match restore_login(session).await {
             Ok(mtx_client) => State::LoggedIn { mtx_client },
@@ -110,7 +116,8 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
         }
     };
 
-    let mtx_client = MatrixClient::new_from_user_id(&user_id).await?;
+    let mtx_client =
+        MatrixClient::new_from_user_id_with_config(&user_id, matrix_client_config()).await?;
     let response =
         mtx_client.login(user_id.localpart(), &login_data.password, None, Some("jmc")).await?;
 
@@ -118,8 +125,14 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
 }
 
 async fn restore_login(session: Session) -> matrix_sdk::Result<MatrixClient> {
-    let mtx_client = MatrixClient::new_from_user_id(&session.user_id).await?;
+    let mtx_client =
+        MatrixClient::new_from_user_id_with_config(&session.user_id, matrix_client_config())
+            .await?;
     mtx_client.restore_login(session).await?;
 
     Ok(mtx_client)
+}
+
+fn matrix_client_config() -> MatrixClientConfig {
+    MatrixClientConfig::new().store_path(&*CONFIG_DIR_PATH)
 }

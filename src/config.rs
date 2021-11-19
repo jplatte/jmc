@@ -4,13 +4,14 @@ use matrix_sdk::Session;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
+pub static CONFIG_DIR_PATH: Lazy<PathBuf> = Lazy::new(|| dirs::data_dir().unwrap().join("jmc"));
+
 #[derive(Default, Deserialize, Serialize)]
 pub struct Config {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session: Option<Session>,
 }
 
-static CONFIG_DIR_PATH: Lazy<PathBuf> = Lazy::new(|| dirs::data_dir().unwrap().join("jmc"));
 static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| CONFIG_DIR_PATH.join("config.json"));
 
 pub fn load() -> anyhow::Result<Config> {
