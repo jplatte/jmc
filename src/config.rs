@@ -10,6 +10,8 @@ pub static CONFIG_DIR_PATH: Lazy<PathBuf> = Lazy::new(|| dirs::data_dir().unwrap
 pub struct Config {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session: Option<Session>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sync_token: Option<String>,
 }
 
 static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| CONFIG_DIR_PATH.join("config.json"));
@@ -25,7 +27,7 @@ pub fn load() -> anyhow::Result<Config> {
 pub fn save(config: &Config) -> anyhow::Result<()> {
     fs::create_dir_all(&*CONFIG_DIR_PATH)?;
     let file = fs::File::create(&*CONFIG_FILE_PATH)?;
-    serde_json::to_writer(file, config)?;
+    serde_json::to_writer_pretty(file, config)?;
 
     Ok(())
 }
