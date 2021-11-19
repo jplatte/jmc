@@ -9,6 +9,7 @@ use crate::ui::actions::UserData;
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct AppState {
+    pub view: View,
     pub login_state: LoginState,
     pub user_state: Option<UserState>,
 
@@ -17,9 +18,16 @@ pub struct AppState {
     login_tx: Sender<LoginState>,
 }
 
+#[derive(Clone, Copy, PartialEq, druid::Data)]
+pub enum View {
+    Login,
+    Loading,
+    Main,
+}
+
 impl AppState {
-    pub fn new(login_tx: Sender<LoginState>) -> Self {
-        Self { login_state: Default::default(), user_state: None, login_tx }
+    pub fn new(view: View, login_tx: Sender<LoginState>) -> Self {
+        Self { view, login_state: Default::default(), user_state: None, login_tx }
     }
 
     pub fn login(&self) {

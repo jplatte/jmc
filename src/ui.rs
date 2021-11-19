@@ -1,26 +1,26 @@
 pub mod actions;
 
 use druid::{
+    lens,
     widget::{Align, Button, Flex, Label, Padding, Split, TextBox, ViewSwitcher},
     LensExt as _, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 
 use self::actions::FINISH_LOGIN;
-use crate::data::{AppState, LoginState};
+use crate::data::{AppState, LoginState, View};
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
     ViewSwitcher::<AppState, _>::new(
-        |state, _| state.user_state.is_some(),
-        |&logged_in, _, _| {
-            if logged_in {
-                main_ui().boxed()
-            } else {
-                login_screen().boxed()
-            }
+        |state, _| state.view,
+        |view, _, _| match view {
+            View::Login => login_screen().boxed(),
+            View::Loading => loading().lens(lens::Unit).boxed(),
+            View::Main => main_ui().boxed(),
         },
     )
     .on_command(FINISH_LOGIN, |ctx, user_data, state| {
+        state.view = View::Main;
         state.login_state = Default::default();
         state.user_state = Some(user_data.into());
         ctx.set_handled();
@@ -46,6 +46,10 @@ fn login_screen() -> impl Widget<AppState> {
                 state.login();
             })),
     )
+}
+
+fn loading() -> impl Widget<()> {
+    druid::widget::Spinner::new()
 }
 
 fn main_ui() -> impl Widget<AppState> {
