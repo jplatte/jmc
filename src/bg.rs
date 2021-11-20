@@ -107,11 +107,12 @@ async fn logged_in_main(
 
     let joined_rooms = mtx_client.joined_rooms();
     if !joined_rooms.is_empty() {
-        if let Err(e) = ui_handle.submit_command(
-            ADD_OR_UPDATE_ROOMS,
-            joined_rooms.iter().map(|room| RoomState::new(room)).collect::<Vec<_>>(),
-            Target::Auto,
-        ) {
+        let mut rooms = Vec::new();
+        for r in joined_rooms {
+            rooms.push(RoomState::new(&r).await);
+        }
+
+        if let Err(e) = ui_handle.submit_command(ADD_OR_UPDATE_ROOMS, rooms, Target::Auto) {
             error!("{}", e);
         }
     }

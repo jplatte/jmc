@@ -14,7 +14,7 @@ pub async fn on_room_create(
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
     if let Err(e) =
-        ui_handle.submit_command(ADD_OR_UPDATE_ROOM, RoomState::new(&room), Target::Auto)
+        ui_handle.submit_command(ADD_OR_UPDATE_ROOM, RoomState::new(&room).await, Target::Auto)
     {
         error!("{}", e);
     }
@@ -26,7 +26,7 @@ pub async fn on_room_name(
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
     if let Err(e) =
-        ui_handle.submit_command(ADD_OR_UPDATE_ROOM, RoomState::new(&room), Target::Auto)
+        ui_handle.submit_command(ADD_OR_UPDATE_ROOM, RoomState::new(&room).await, Target::Auto)
     {
         error!("{}", e);
     }

@@ -4,6 +4,7 @@ use druid::{im::OrdMap, Key};
 use matrix_sdk::{room, Client as MatrixClient};
 use task_group::TaskGroup;
 use tokio::sync::mpsc::Sender;
+use tracing::error;
 
 use crate::{ui::actions::UserData, util::RoomIdArc};
 
@@ -63,12 +64,20 @@ impl From<&UserData> for UserState {
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct RoomState {
     pub id: RoomIdArc,
-    pub name: Option<String>,
+    pub display_name: String,
     // icon
 }
 
 impl RoomState {
-    pub fn new(room: &room::Common) -> Self {
-        Self { id: room.room_id().into(), name: room.name() }
+    pub async fn new(room: &room::Common) -> Self {
+        let display_name = match room.display_name().await {
+            Ok(name) => name,
+            Err(e) => {
+                error!("Failed to compute room display name: {}", e);
+                "<error>".to_owned()
+            }
+        };
+
+        Self { id: room.room_id().into(), display_name }
     }
 }

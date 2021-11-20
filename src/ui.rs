@@ -78,9 +78,7 @@ fn rooms_sidebar() -> impl Widget<UserState> {
 }
 
 fn make_room_item() -> impl Widget<RoomState> {
-    Label::new(|state: &RoomState, _env: &_| {
-        state.name.clone().unwrap_or_else(|| "Unnamed".to_owned())
-    })
+    Label::new(|state: &RoomState, _env: &_| state.display_name.clone())
 }
 
 fn room_view() -> impl Widget<UserState> {
