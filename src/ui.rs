@@ -64,17 +64,20 @@ fn main_ui() -> impl Widget<UserState> {
 }
 
 fn rooms_sidebar() -> impl Widget<UserState> {
-    Flex::column()
-        .with_child(Label::new("<sidebar>"))
-        .with_child(Scroll::new(List::new(make_room_item).lens(UserState::rooms)).vertical())
-        .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
-            state.rooms.insert(room_state.id.clone(), room_state.clone());
-        })
-        .on_command(ADD_OR_UPDATE_ROOMS, |_ctx, rooms, state| {
-            state
-                .rooms
-                .extend(rooms.iter().map(|room_state| (room_state.id.clone(), room_state.clone())));
-        })
+    Scroll::new(
+        Flex::column()
+            .with_child(Label::new("<sidebar>"))
+            .with_child(List::new(make_room_item).lens(UserState::rooms)),
+    )
+    .vertical()
+    .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
+        state.rooms.insert(room_state.id.clone(), room_state.clone());
+    })
+    .on_command(ADD_OR_UPDATE_ROOMS, |_ctx, rooms, state| {
+        state
+            .rooms
+            .extend(rooms.iter().map(|room_state| (room_state.id.clone(), room_state.clone())));
+    })
 }
 
 fn make_room_item() -> impl Widget<RoomState> {
