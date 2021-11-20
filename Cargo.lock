@@ -60,9 +60,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
+checksum = "38d9ff5d688f1c13395289f67db01d4826b46dd694e7580accdc3e8430f2d98e"
 
 [[package]]
 name = "anymap2"
@@ -87,6 +87,15 @@ name = "associative-cache"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46016233fc1bb55c23b856fe556b7db6ccd05119a0a392e04f0b3b7c79058f16"
+
+[[package]]
+name = "async-lock"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6a8ea61bf9947a1007c5cada31e647dbc77b103c679858150003ba697ea798b"
+dependencies = [
+ "event-listener",
+]
 
 [[package]]
 name = "async-stream"
@@ -759,28 +768,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "futures"
-version = "0.3.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a12aa0eb539080d55c3f2d45a67c3b58b6b0773c1a3ca2dfec66d58c97fd66ca"
-dependencies = [
- "futures-channel",
- "futures-core",
- "futures-executor",
- "futures-io",
- "futures-sink",
- "futures-task",
- "futures-util",
-]
-
-[[package]]
 name = "futures-channel"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5da6ba8c3bb3c165d3c7319fc1cc8304facf1fb8db99c5de877183c08a273888"
 dependencies = [
  "futures-core",
- "futures-sink",
 ]
 
 [[package]]
@@ -805,15 +798,6 @@ name = "futures-io"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "522de2a0fe3e380f1bc577ba0474108faf3f6b18321dbf60b3b9c39a75073377"
-
-[[package]]
-name = "futures-locks"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50c4e684ddb2d8a4db5ca8a02b35156da129674ba4412b6f528698d58c594954"
-dependencies = [
- "futures",
-]
 
 [[package]]
 name = "futures-macro"
@@ -859,11 +843,8 @@ dependencies = [
  "autocfg",
  "futures-channel",
  "futures-core",
- "futures-io",
  "futures-macro",
- "futures-sink",
  "futures-task",
- "memchr",
  "pin-project-lite",
  "pin-utils",
  "proc-macro-hack",
@@ -1391,7 +1372,7 @@ dependencies = [
  "task-group",
  "tokio",
  "tracing",
- "tracing-subscriber 0.3.1",
+ "tracing-subscriber 0.3.2",
 ]
 
 [[package]]
@@ -1493,7 +1474,7 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 [[package]]
 name = "matrix-sdk"
 version = "0.4.1"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#f5ba9a5eea8021ab483e9346f8708e71c188917a"
+source = "git+https://github.com/jplatte/matrix-rust-sdk?branch=client-arc#b4220bd82464ac0341ce02bb6974125c978ef11d"
 dependencies = [
  "anymap2",
  "async-stream",
@@ -1522,7 +1503,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-base"
 version = "0.4.1"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#f5ba9a5eea8021ab483e9346f8708e71c188917a"
+source = "git+https://github.com/jplatte/matrix-rust-sdk?branch=client-arc#b4220bd82464ac0341ce02bb6974125c978ef11d"
 dependencies = [
  "chacha20poly1305",
  "dashmap",
@@ -1548,10 +1529,10 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-common"
 version = "0.4.1"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#f5ba9a5eea8021ab483e9346f8708e71c188917a"
+source = "git+https://github.com/jplatte/matrix-rust-sdk?branch=client-arc#b4220bd82464ac0341ce02bb6974125c978ef11d"
 dependencies = [
+ "async-lock",
  "async-trait",
- "futures-locks",
  "futures-util",
  "instant",
  "ruma",
@@ -1564,7 +1545,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-crypto"
 version = "0.4.1"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#f5ba9a5eea8021ab483e9346f8708e71c188917a"
+source = "git+https://github.com/jplatte/matrix-rust-sdk?branch=client-arc#b4220bd82464ac0341ce02bb6974125c978ef11d"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -2984,9 +2965,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80a4ddde70311d8da398062ecf6fc2c309337de6b0f77d6c27aff8d53f6fca52"
+checksum = "7507ec620f809cdf07cccb5bc57b13069a88031b795efd4079b1c71b66c1613d"
 dependencies = [
  "ansi_term",
  "sharded-slab",
@@ -3003,7 +2984,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4575c663a174420fa2d78f4108ff68f65bf2fbb7dd89f33749b6e826b3626e07"
 dependencies = [
  "tracing",
- "tracing-subscriber 0.3.1",
+ "tracing-subscriber 0.3.2",
  "wasm-bindgen",
 ]
 

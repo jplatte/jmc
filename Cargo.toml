@@ -22,7 +22,8 @@ tokio = { version = "1.13.0", features = ["fs", "sync", "rt-multi-thread"] }
 task-group = "0.2.1"
 
 [dependencies.matrix-sdk]
-git = "https://github.com/matrix-org/matrix-rust-sdk"
+git = "https://github.com/jplatte/matrix-rust-sdk"
+branch = "client-arc"
 default-features = false
 features = [
     "encryption",

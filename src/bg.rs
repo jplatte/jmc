@@ -26,8 +26,6 @@ use crate::{
 
 pub mod event_handlers;
 
-// FIXME: Make MatrixClient smaller
-#[allow(clippy::large_enum_variant)]
 enum State {
     LoggedOut,
     LoggedIn { mtx_client: MatrixClient },
