@@ -8,6 +8,7 @@ mod bg;
 mod config;
 mod data;
 mod ui;
+mod util;
 
 fn main() -> Result<(), PlatformError> {
     tracing_subscriber::fmt::init();

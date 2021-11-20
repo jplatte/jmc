@@ -1,4 +1,4 @@
-use std::{ops::ControlFlow, sync::Arc};
+use std::ops::ControlFlow;
 
 use anyhow::bail;
 use druid::Target;
@@ -20,8 +20,8 @@ use tracing::error;
 
 use crate::{
     config::{self, Config, CONFIG_DIR_PATH},
-    data::LoginState,
-    ui::actions::{UserData, ADD_ROOMS, FINISH_LOGIN},
+    data::{LoginState, RoomState},
+    ui::actions::{UserData, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
 };
 
 pub mod event_handlers;
@@ -108,8 +108,8 @@ async fn logged_in_main(
     let joined_rooms = mtx_client.joined_rooms();
     if !joined_rooms.is_empty() {
         if let Err(e) = ui_handle.submit_command(
-            ADD_ROOMS,
-            joined_rooms.iter().map(|room| Arc::new(room.room_id().to_owned())).collect::<Vec<_>>(),
+            ADD_OR_UPDATE_ROOMS,
+            joined_rooms.iter().map(|room| RoomState::new(room)).collect::<Vec<_>>(),
             Target::Auto,
         ) {
             error!("{}", e);
@@ -128,6 +128,8 @@ async fn logged_in_main(
     mtx_client
         .register_event_handler_context(ui_handle.clone())
         .register_event_handler(event_handlers::on_room_create)
+        .await
+        .register_event_handler(event_handlers::on_room_name)
         .await;
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));

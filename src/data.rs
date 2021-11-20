@@ -1,11 +1,11 @@
 use std::{convert::Infallible, sync::Arc};
 
-use druid::Key;
-use matrix_sdk::{ruma::RoomId, Client as MatrixClient};
+use druid::{im::OrdMap, Key};
+use matrix_sdk::{room, Client as MatrixClient};
 use task_group::TaskGroup;
 use tokio::sync::mpsc::Sender;
 
-use crate::ui::actions::UserData;
+use crate::{ui::actions::UserData, util::RoomIdArc};
 
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
@@ -39,7 +39,7 @@ pub struct LoginState {
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct UserState {
     // For the sidebar
-    pub rooms: Arc<Vec<RoomState>>,
+    pub rooms: OrdMap<RoomIdArc, RoomState>,
 
     #[data(ignore)]
     #[lens(ignore)]
@@ -62,7 +62,13 @@ impl From<&UserData> for UserState {
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct RoomState {
-    #[data(eq)]
-    pub room_id: Arc<RoomId>,
+    pub id: RoomIdArc,
+    pub name: Option<String>,
     // icon
+}
+
+impl RoomState {
+    pub fn new(room: &room::Common) -> Self {
+        Self { id: room.room_id().into(), name: room.name() }
+    }
 }

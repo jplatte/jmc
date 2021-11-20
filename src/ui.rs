@@ -1,7 +1,5 @@
 pub mod actions;
 
-use std::sync::Arc;
-
 use druid::{
     lens,
     widget::{Align, Button, Flex, Label, List, Padding, Scroll, Split, TextBox, ViewSwitcher},
@@ -10,7 +8,7 @@ use druid::{
 use druid_widget_nursery::WidgetExt as _;
 use tracing::error;
 
-use self::actions::{ADD_ROOM, ADD_ROOMS, FINISH_LOGIN};
+use self::actions::{ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN};
 use crate::data::{AppState, LoginState, RoomState, UserState, View, LOGIN_TX};
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
@@ -69,17 +67,20 @@ fn rooms_sidebar() -> impl Widget<UserState> {
     Flex::column()
         .with_child(Label::new("<sidebar>"))
         .with_child(Scroll::new(List::new(make_room_item).lens(UserState::rooms)).vertical())
-        .on_command(ADD_ROOM, |_ctx, room_id, state| {
-            Arc::make_mut(&mut state.rooms).push(RoomState { room_id: room_id.clone() });
+        .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
+            state.rooms.insert(room_state.id.clone(), room_state.clone());
         })
-        .on_command(ADD_ROOMS, |_ctx, room_ids, state| {
-            Arc::make_mut(&mut state.rooms)
-                .extend(room_ids.iter().map(|room_id| RoomState { room_id: room_id.clone() }));
+        .on_command(ADD_OR_UPDATE_ROOMS, |_ctx, rooms, state| {
+            state
+                .rooms
+                .extend(rooms.iter().map(|room_state| (room_state.id.clone(), room_state.clone())));
         })
 }
 
 fn make_room_item() -> impl Widget<RoomState> {
-    Label::new(|state: &RoomState, _env: &_| state.room_id.to_string())
+    Label::new(|state: &RoomState, _env: &_| {
+        state.name.clone().unwrap_or_else(|| "Unnamed".to_owned())
+    })
 }
 
 fn room_view() -> impl Widget<UserState> {
