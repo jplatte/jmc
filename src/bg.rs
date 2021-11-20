@@ -12,7 +12,7 @@ use matrix_sdk::{
         },
         assign, UserId,
     },
-    Client as MatrixClient, LoopCtrl, Session,
+    Client as MatrixClient, Session,
 };
 use task_group::TaskGroup;
 use tokio::{fs, sync::mpsc::Receiver, task};
@@ -30,7 +30,7 @@ pub mod event_handlers;
 #[allow(clippy::large_enum_variant)]
 enum State {
     LoggedOut,
-    LoggedIn { mtx_client: MatrixClient, session: Session },
+    LoggedIn { mtx_client: MatrixClient },
 }
 
 pub async fn main(
@@ -45,7 +45,7 @@ pub async fn main(
 
     let mut state = if let Some(session) = config.session {
         match restore_login(session.clone()).await {
-            Ok(mtx_client) => State::LoggedIn { mtx_client, session },
+            Ok(mtx_client) => State::LoggedIn { mtx_client },
             Err(e) => {
                 error!("{}", e);
                 // FIXME: Display an error message on the login screen
@@ -59,9 +59,7 @@ pub async fn main(
     loop {
         let res = match state {
             State::LoggedOut => logged_out_main(&mut login_rx).await,
-            State::LoggedIn { mtx_client, session } => {
-                logged_in_main(mtx_client, session, ui_handle.clone()).await
-            }
+            State::LoggedIn { mtx_client } => logged_in_main(mtx_client, ui_handle.clone()).await,
         };
 
         match res {
@@ -84,18 +82,13 @@ async fn logged_out_main(login_rx: &mut Receiver<LoginState>) -> ControlFlow<(),
                 user_id: login_response.user_id,
                 device_id: login_response.device_id,
             };
+            let config = Config { session: Some(session) };
 
-            let save_res = task::spawn_blocking({
-                let session = session.clone();
-                move || config::save(&Config { session: Some(session), sync_token: None })
-            })
-            .await;
-
-            if let Err(e) = save_res {
+            if let Err(e) = task::spawn_blocking(move || config::save(&config)).await {
                 error!("Failed to save config: {:?}", e);
             }
 
-            ControlFlow::Continue(State::LoggedIn { mtx_client, session })
+            ControlFlow::Continue(State::LoggedIn { mtx_client })
         }
         Err(e) => {
             error!("{:?}", e);
@@ -106,7 +99,6 @@ async fn logged_out_main(login_rx: &mut Receiver<LoginState>) -> ControlFlow<(),
 
 async fn logged_in_main(
     mtx_client: MatrixClient,
-    session: Session,
     ui_handle: druid::ExtEventSink,
 ) -> ControlFlow<(), State> {
     let (task_group, _task_manager) = TaskGroup::new();
@@ -130,24 +122,7 @@ async fn logged_in_main(
         .await;
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));
-    mtx_client
-        .sync_with_callback(sync_settings, |sync_response| async {
-            let session = session.clone();
-            let save_res = task::spawn_blocking(move || {
-                config::save(&Config {
-                    session: Some(session),
-                    sync_token: Some(sync_response.next_batch),
-                })
-            })
-            .await;
-
-            if let Err(e) = save_res {
-                error!("Failed to save config: {:?}", e);
-            }
-
-            LoopCtrl::Continue
-        })
-        .await;
+    mtx_client.sync(sync_settings).await;
 
     ControlFlow::Break(())
 }
