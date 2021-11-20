@@ -10,7 +10,7 @@ use druid::{
 use druid_widget_nursery::WidgetExt as _;
 use tracing::error;
 
-use self::actions::{ADD_ROOM, FINISH_LOGIN};
+use self::actions::{ADD_ROOM, ADD_ROOMS, FINISH_LOGIN};
 use crate::data::{AppState, LoginState, RoomState, UserState, View, LOGIN_TX};
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
@@ -71,6 +71,10 @@ fn rooms_sidebar() -> impl Widget<UserState> {
         .with_child(Scroll::new(List::new(make_room_item).lens(UserState::rooms)).vertical())
         .on_command(ADD_ROOM, |_ctx, room_id, state| {
             Arc::make_mut(&mut state.rooms).push(RoomState { room_id: room_id.clone() });
+        })
+        .on_command(ADD_ROOMS, |_ctx, room_ids, state| {
+            Arc::make_mut(&mut state.rooms)
+                .extend(room_ids.iter().map(|room_id| RoomState { room_id: room_id.clone() }));
         })
 }
 

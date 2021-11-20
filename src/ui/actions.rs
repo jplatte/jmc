@@ -12,3 +12,4 @@ pub struct UserData {
 pub const FINISH_LOGIN: Selector<UserData> = Selector::new("finish-login");
 
 pub const ADD_ROOM: Selector<Arc<RoomId>> = Selector::new("add-room");
+pub const ADD_ROOMS: Selector<Vec<Arc<RoomId>>> = Selector::new("add-rooms");
