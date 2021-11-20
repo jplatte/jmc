@@ -1,5 +1,6 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
+use data::LOGIN_TX;
 use druid::{AppLauncher, PlatformError, WindowDesc};
 use tokio::{runtime::Runtime, sync::mpsc};
 
@@ -18,16 +19,18 @@ fn main() -> Result<(), PlatformError> {
     let rt = Runtime::new().unwrap();
     let _guard = rt.enter();
 
-    let launcher = AppLauncher::with_window(WindowDesc::new(ui::build_ui()));
-
     let (login_tx, login_rx) = mpsc::channel(1);
+
+    let login_tx = Arc::new(login_tx);
+    let launcher = AppLauncher::with_window(WindowDesc::new(ui::build_ui()))
+        .configure_env(move |env, _state| env.set(LOGIN_TX, login_tx.clone()));
     let event_sink = launcher.get_external_handle();
 
     let initial_view =
         if config.session.is_some() { data::View::Loading } else { data::View::Login };
 
     tokio::spawn(bg::main(config, login_rx, event_sink));
-    launcher.launch(data::AppState::new(initial_view, login_tx))?;
+    launcher.launch(data::AppState::new(initial_view))?;
 
     // After the GUI is closed, shut down all pending async tasks.
     rt.shutdown_timeout(Duration::from_secs(5));

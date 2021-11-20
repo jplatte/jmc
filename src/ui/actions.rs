@@ -1,7 +1,7 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::Arc};
 
 use druid::Selector;
-use matrix_sdk::Client as MatrixClient;
+use matrix_sdk::{ruma::RoomId, Client as MatrixClient};
 use task_group::TaskGroup;
 
 pub struct UserData {
@@ -10,3 +10,5 @@ pub struct UserData {
 }
 
 pub const FINISH_LOGIN: Selector<UserData> = Selector::new("finish-login");
+
+pub const ADD_ROOM: Selector<Arc<RoomId>> = Selector::new("add-room");

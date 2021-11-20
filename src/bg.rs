@@ -24,6 +24,8 @@ use crate::{
     ui::actions::{UserData, FINISH_LOGIN},
 };
 
+pub mod event_handlers;
+
 // FIXME: Make MatrixClient smaller
 #[allow(clippy::large_enum_variant)]
 enum State {
@@ -34,7 +36,7 @@ enum State {
 pub async fn main(
     config: Config,
     mut login_rx: Receiver<LoginState>,
-    event_sink: druid::ExtEventSink,
+    ui_handle: druid::ExtEventSink,
 ) {
     if let Err(e) = fs::create_dir_all(&*CONFIG_DIR_PATH).await {
         error!("Failed to create store directory: {}", e);
@@ -58,7 +60,7 @@ pub async fn main(
         let res = match state {
             State::LoggedOut => logged_out_main(&mut login_rx).await,
             State::LoggedIn { mtx_client, session } => {
-                logged_in_main(mtx_client, session, &event_sink).await
+                logged_in_main(mtx_client, session, ui_handle.clone()).await
             }
         };
 
@@ -105,11 +107,11 @@ async fn logged_out_main(login_rx: &mut Receiver<LoginState>) -> ControlFlow<(),
 async fn logged_in_main(
     mtx_client: MatrixClient,
     session: Session,
-    event_sink: &druid::ExtEventSink,
+    ui_handle: druid::ExtEventSink,
 ) -> ControlFlow<(), State> {
     let (task_group, _task_manager) = TaskGroup::new();
     let user_data = UserData { mtx_client: mtx_client.clone(), task_group };
-    if let Err(e) = event_sink.submit_command(FINISH_LOGIN, user_data, Target::Auto) {
+    if let Err(e) = ui_handle.submit_command(FINISH_LOGIN, user_data, Target::Auto) {
         error!("{}", e);
     }
 
@@ -121,6 +123,11 @@ async fn logged_in_main(
         })
     });
     let filter_id = mtx_client.get_or_upload_filter("jmc_sync", filter).await.unwrap();
+
+    mtx_client
+        .register_event_handler_context(ui_handle.clone())
+        .register_event_handler(event_handlers::on_room_create)
+        .await;
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));
     mtx_client

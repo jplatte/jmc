@@ -1,21 +1,20 @@
 use std::{convert::Infallible, sync::Arc};
 
+use druid::Key;
 use matrix_sdk::{ruma::RoomId, Client as MatrixClient};
 use task_group::TaskGroup;
 use tokio::sync::mpsc::Sender;
-use tracing::error;
 
 use crate::ui::actions::UserData;
+
+// FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
+pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct AppState {
     pub view: View,
     pub login_state: LoginState,
     pub user_state: Option<UserState>,
-
-    #[data(ignore)]
-    #[lens(ignore)]
-    login_tx: Sender<LoginState>,
 }
 
 #[derive(Clone, Copy, PartialEq, druid::Data)]
@@ -26,16 +25,8 @@ pub enum View {
 }
 
 impl AppState {
-    pub fn new(view: View, login_tx: Sender<LoginState>) -> Self {
-        Self { view, login_state: Default::default(), user_state: None, login_tx }
-    }
-
-    pub fn login(&self) {
-        let send_res = self.login_tx.try_send(self.login_state.clone());
-
-        if let Err(e) = send_res {
-            error!("Sending login data failed: {}", e);
-        }
+    pub fn new(view: View) -> Self {
+        Self { view, login_state: Default::default(), user_state: None }
     }
 }
 
@@ -47,8 +38,8 @@ pub struct LoginState {
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct UserState {
-    #[data(eq)]
-    focused_room: Option<Arc<RoomId>>,
+    // For the sidebar
+    pub rooms: Arc<Vec<RoomState>>,
 
     #[data(ignore)]
     #[lens(ignore)]
@@ -62,9 +53,16 @@ pub struct UserState {
 impl From<&UserData> for UserState {
     fn from(data: &UserData) -> Self {
         Self {
-            focused_room: None,
+            rooms: Default::default(),
             mtx_client: data.mtx_client.clone(),
             task_group: data.task_group.clone(),
         }
     }
+}
+
+#[derive(Clone, druid::Data, druid::Lens)]
+pub struct RoomState {
+    #[data(eq)]
+    pub room_id: Arc<RoomId>,
+    // icon
 }
