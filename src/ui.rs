@@ -3,12 +3,12 @@ pub mod actions;
 use druid::{
     lens,
     widget::{Align, Button, Flex, Label, List, Padding, Scroll, Split, TextBox, ViewSwitcher},
-    LensExt as _, Widget, WidgetExt as _,
+    Command, LensExt as _, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use tracing::error;
 
-use self::actions::{ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN};
+use self::actions::{ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, SET_ACTIVE_ROOM};
 use crate::data::{AppState, LoginState, RoomState, UserState, View, LOGIN_TX};
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
@@ -57,7 +57,26 @@ fn loading() -> impl Widget<()> {
 }
 
 fn main_ui() -> impl Widget<UserState> {
-    Split::columns(rooms_sidebar(), room_view())
+    let right_pane = ViewSwitcher::<UserState, _>::new(
+        |state, _| state.active_room.is_some(),
+        |&has_active_room, _, _| {
+            if has_active_room {
+                room_view()
+                    .lens(UserState::active_room.map(
+                        |state| state.clone().unwrap(),
+                        |state_a, state_b| *state_a = Some(state_b),
+                    ))
+                    .boxed()
+            } else {
+                Label::new("<no room selected>").lens(lens::Unit).boxed()
+            }
+        },
+    )
+    .on_command(SET_ACTIVE_ROOM, |_ctx, room_state, user_state| {
+        user_state.active_room = Some(room_state.clone());
+    });
+
+    Split::columns(rooms_sidebar(), right_pane)
         .min_size(200.0, 400.0)
         .split_point(0.0)
         .bar_size(0.0)
@@ -67,7 +86,7 @@ fn rooms_sidebar() -> impl Widget<UserState> {
     Scroll::new(
         Flex::column()
             .with_child(Label::new("<sidebar>"))
-            .with_child(List::new(make_room_item).lens(UserState::rooms)),
+            .with_child(List::new(make_room_item).with_spacing(6.0).lens(UserState::rooms)),
     )
     .vertical()
     .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
@@ -81,9 +100,13 @@ fn rooms_sidebar() -> impl Widget<UserState> {
 }
 
 fn make_room_item() -> impl Widget<RoomState> {
-    Label::new(|state: &RoomState, _env: &_| state.display_name.clone())
+    Label::new(|state: &RoomState, _env: &_| state.display_name.clone()).on_click(
+        |ctx, state, _env| {
+            ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto))
+        },
+    )
 }
 
-fn room_view() -> impl Widget<UserState> {
-    Label::new("<room view>")
+fn room_view() -> impl Widget<RoomState> {
+    Label::new(|state: &RoomState, _env: &_| state.display_name.clone())
 }

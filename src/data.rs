@@ -42,6 +42,11 @@ pub struct UserState {
     // For the sidebar
     pub rooms: OrdMap<RoomIdArc, RoomState>,
 
+    // Will use some sort of FullRoomState in the future that
+    // can contain more stuff but can be created from RoomState
+    pub active_room: Option<RoomState>,
+
+    // FIXME: Use Env for these as well
     #[data(ignore)]
     #[lens(ignore)]
     pub mtx_client: MatrixClient,
@@ -55,6 +60,7 @@ impl From<&UserData> for UserState {
     fn from(data: &UserData) -> Self {
         Self {
             rooms: Default::default(),
+            active_room: None,
             mtx_client: data.mtx_client.clone(),
             task_group: data.task_group.clone(),
         }

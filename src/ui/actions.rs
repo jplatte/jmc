@@ -15,3 +15,5 @@ pub const FINISH_LOGIN: Selector<UserData> = Selector::new("finish-login");
 
 pub const ADD_OR_UPDATE_ROOM: Selector<RoomState> = Selector::new("add-room");
 pub const ADD_OR_UPDATE_ROOMS: Selector<Vec<RoomState>> = Selector::new("add-rooms");
+
+pub const SET_ACTIVE_ROOM: Selector<RoomState> = Selector::new("set-active-room");
