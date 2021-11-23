@@ -1,7 +1,15 @@
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible, io::Cursor, sync::Arc};
 
-use druid::{im::OrdMap, Key};
-use matrix_sdk::{room, ruma::events::room::message::SyncRoomMessageEvent, Client as MatrixClient};
+use druid::{im::OrdMap, image::io::Reader as ImageReader, ImageBuf, Key};
+use matrix_sdk::{
+    media::{MediaFormat, MediaThumbnailSize},
+    room,
+    ruma::{
+        api::client::r0::media::get_content_thumbnail::Method as ResizeMethod,
+        events::room::message::SyncRoomMessageEvent, uint,
+    },
+    Client as MatrixClient,
+};
 use task_group::TaskGroup;
 use tokio::sync::mpsc::Sender;
 use tracing::error;
@@ -70,7 +78,7 @@ impl From<&UserData> for UserState {
 pub struct MinRoomState {
     pub id: RoomIdArc,
     pub display_name: String,
-    // icon
+    pub icon: Option<ImageBuf>,
 }
 
 impl MinRoomState {
@@ -83,7 +91,28 @@ impl MinRoomState {
             }
         };
 
-        Self { id: room.room_id().into(), display_name }
+        let icon_format = MediaFormat::Thumbnail(MediaThumbnailSize {
+            method: ResizeMethod::Scale,
+            width: uint!(32),
+            height: uint!(32),
+        });
+        let icon_bytes = match room.avatar(icon_format).await {
+            Ok(b) => b,
+            Err(e) => {
+                error!("Failed to load room icon: {}", e);
+                None
+            }
+        };
+        let icon =
+            icon_bytes.and_then(|bytes| match ImageReader::new(Cursor::new(bytes)).decode() {
+                Ok(image) => Some(ImageBuf::from_dynamic_image(image)),
+                Err(e) => {
+                    error!("Failed to decode room icon: {}", e);
+                    None
+                }
+            });
+
+        Self { id: room.room_id().into(), display_name, icon }
     }
 }
 
