@@ -20,7 +20,7 @@ use tracing::error;
 
 use crate::{
     config::{self, Config, CONFIG_DIR_PATH},
-    data::{LoginState, RoomState},
+    data::{LoginState, MinRoomState},
     ui::actions::{UserData, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
 };
 
@@ -109,7 +109,7 @@ async fn logged_in_main(
     if !joined_rooms.is_empty() {
         let mut rooms = Vec::new();
         for r in joined_rooms {
-            rooms.push(RoomState::new(&r).await);
+            rooms.push(MinRoomState::new(&r).await);
         }
 
         if let Err(e) = ui_handle.submit_command(ADD_OR_UPDATE_ROOMS, rooms, Target::Auto) {
@@ -131,6 +131,8 @@ async fn logged_in_main(
         .register_event_handler(event_handlers::on_room_create)
         .await
         .register_event_handler(event_handlers::on_room_name)
+        .await
+        .register_event_handler(event_handlers::on_room_message)
         .await;
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));

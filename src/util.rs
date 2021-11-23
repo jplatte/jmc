@@ -1,6 +1,47 @@
-use std::{fmt, sync::Arc};
+use std::{fmt, ops::Deref, sync::Arc};
 
-use matrix_sdk::ruma::RoomId;
+use matrix_sdk::ruma::{EventId, RoomId};
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
+pub struct EventIdArc(#[data(eq)] Arc<EventId>);
+
+impl fmt::Display for EventIdArc {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Deref for EventIdArc {
+    type Target = EventId;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
+    }
+}
+
+impl From<EventId> for EventIdArc {
+    fn from(room_id: EventId) -> Self {
+        Self(room_id.into())
+    }
+}
+
+impl From<&EventId> for EventIdArc {
+    fn from(room_id: &EventId) -> Self {
+        Self(room_id.to_owned().into())
+    }
+}
+
+impl From<Arc<EventId>> for EventIdArc {
+    fn from(arc: Arc<EventId>) -> Self {
+        Self(arc)
+    }
+}
+
+impl From<&Arc<EventId>> for EventIdArc {
+    fn from(arc: &Arc<EventId>) -> Self {
+        Self(arc.clone())
+    }
+}
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub struct RoomIdArc(#[data(eq)] Arc<RoomId>);
@@ -8,6 +49,14 @@ pub struct RoomIdArc(#[data(eq)] Arc<RoomId>);
 impl fmt::Display for RoomIdArc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+impl Deref for RoomIdArc {
+    type Target = RoomId;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
     }
 }
 

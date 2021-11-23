@@ -8,8 +8,13 @@ use druid::{
 use druid_widget_nursery::WidgetExt as _;
 use tracing::error;
 
-use self::actions::{ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, SET_ACTIVE_ROOM};
-use crate::data::{AppState, LoginState, RoomState, UserState, View, LOGIN_TX};
+use self::actions::{
+    ADD_EVENT, ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, SET_ACTIVE_ROOM,
+};
+use crate::data::{
+    ActiveRoomState, AppState, EventState, EventTypeState, LoginState, MinRoomState, UserState,
+    View, LOGIN_TX,
+};
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
     ViewSwitcher::<AppState, _>::new(
@@ -73,7 +78,7 @@ fn main_ui() -> impl Widget<UserState> {
         },
     )
     .on_command(SET_ACTIVE_ROOM, |_ctx, room_state, user_state| {
-        user_state.active_room = Some(room_state.clone());
+        user_state.active_room = Some(room_state.into());
     });
 
     Split::columns(rooms_sidebar(), right_pane)
@@ -99,14 +104,29 @@ fn rooms_sidebar() -> impl Widget<UserState> {
     })
 }
 
-fn make_room_item() -> impl Widget<RoomState> {
-    Label::new(|state: &RoomState, _env: &_| state.display_name.clone()).on_click(
+fn make_room_item() -> impl Widget<MinRoomState> {
+    Label::new(|state: &MinRoomState, _env: &_| state.display_name.clone()).on_click(
         |ctx, state, _env| {
             ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto))
         },
     )
 }
 
-fn room_view() -> impl Widget<RoomState> {
-    Label::new(|state: &RoomState, _env: &_| state.display_name.clone())
+fn room_view() -> impl Widget<ActiveRoomState> {
+    Flex::column()
+        .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
+        .with_child(Scroll::new(
+            List::new(make_timeline_item).with_spacing(2.0).lens(ActiveRoomState::timeline),
+        ))
+        .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
+            if *state.id == *room_id {
+                state.timeline.insert(event.event_id.clone(), event.clone());
+            }
+        })
+}
+
+fn make_timeline_item() -> impl Widget<EventState> {
+    Label::new(|state: &EventState, _env: &_| match &state.event_type {
+        EventTypeState::RoomMessage { display_string } => display_string.clone(),
+    })
 }
