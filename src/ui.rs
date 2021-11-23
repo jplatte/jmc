@@ -2,7 +2,9 @@ pub mod actions;
 
 use druid::{
     lens,
-    widget::{Align, Button, Flex, Label, List, Padding, Scroll, Split, TextBox, ViewSwitcher},
+    widget::{
+        Align, Button, Flex, Label, List, Maybe, Padding, Scroll, Split, TextBox, ViewSwitcher,
+    },
     Command, LensExt as _, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
@@ -62,26 +64,14 @@ fn loading() -> impl Widget<()> {
 }
 
 fn main_ui() -> impl Widget<UserState> {
-    let right_pane = ViewSwitcher::<UserState, _>::new(
-        |state, _| state.active_room.is_some(),
-        |&has_active_room, _, _| {
-            if has_active_room {
-                room_view()
-                    .lens(UserState::active_room.map(
-                        |state| state.clone().unwrap(),
-                        |state_a, state_b| *state_a = Some(state_b),
-                    ))
-                    .boxed()
-            } else {
-                Label::new("<no room selected>").lens(lens::Unit).boxed()
-            }
+    let right_pane = Maybe::new(room_view, || Label::new("<no room selected>")).on_command(
+        SET_ACTIVE_ROOM,
+        |_ctx, room_state, active_room| {
+            *active_room = Some(room_state.into());
         },
-    )
-    .on_command(SET_ACTIVE_ROOM, |_ctx, room_state, user_state| {
-        user_state.active_room = Some(room_state.into());
-    });
+    );
 
-    Split::columns(rooms_sidebar(), right_pane)
+    Split::columns(rooms_sidebar(), right_pane.lens(UserState::active_room))
         .min_size(200.0, 400.0)
         .split_point(0.0)
         .solid_bar(true)
