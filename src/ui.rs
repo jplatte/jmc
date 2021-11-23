@@ -84,7 +84,8 @@ fn main_ui() -> impl Widget<UserState> {
     Split::columns(rooms_sidebar(), right_pane)
         .min_size(200.0, 400.0)
         .split_point(0.0)
-        .bar_size(0.0)
+        .solid_bar(true)
+        .bar_size(1.0)
 }
 
 fn rooms_sidebar() -> impl Widget<UserState> {
