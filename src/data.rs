@@ -5,6 +5,7 @@ use druid::{
     text::RichText,
     ImageBuf, Key,
 };
+use druid_widget_nursery::prism::Prism;
 use matrix_sdk::{
     room::{self, Room},
     ruma::events::room::message::SyncRoomMessageEvent,
@@ -18,23 +19,58 @@ use crate::util::{EventIdArc, RoomIdArc, UserIdArc};
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
-#[derive(Clone, druid::Data, druid::Lens)]
-pub struct AppState {
-    pub view: View,
-    pub login_state: LoginState,
-    pub user_state: UserState,
+#[derive(Clone, druid::Data)]
+pub enum AppState {
+    Login(LoginState),
+    LoggingIn,
+    LoggedIn(UserState),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, druid::Data)]
-pub enum View {
-    Login,
-    Loading,
-    LoggedIn,
+#[derive(Clone)]
+pub struct AppStateLogin;
+
+#[derive(Clone)]
+pub struct AppStateLoggingIn;
+
+#[derive(Clone)]
+pub struct AppStateLoggedIn;
+
+impl Prism<AppState, LoginState> for AppStateLogin {
+    fn get(&self, data: &AppState) -> Option<LoginState> {
+        match data {
+            AppState::Login(value) => Some(value.clone()),
+            _ => None,
+        }
+    }
+
+    fn put(&self, data: &mut AppState, inner: LoginState) {
+        *data = AppState::Login(inner);
+    }
 }
 
-impl AppState {
-    pub fn new(view: View) -> Self {
-        Self { view, login_state: Default::default(), user_state: Default::default() }
+impl Prism<AppState, ()> for AppStateLoggingIn {
+    fn get(&self, data: &AppState) -> Option<()> {
+        match data {
+            AppState::LoggingIn => Some(()),
+            _ => None,
+        }
+    }
+
+    fn put(&self, data: &mut AppState, _inner: ()) {
+        *data = AppState::LoggingIn;
+    }
+}
+
+impl Prism<AppState, UserState> for AppStateLoggedIn {
+    fn get(&self, data: &AppState) -> Option<UserState> {
+        match data {
+            AppState::LoggedIn(value) => Some(value.clone()),
+            _ => None,
+        }
+    }
+
+    fn put(&self, data: &mut AppState, inner: UserState) {
+        *data = AppState::LoggedIn(inner);
     }
 }
 

@@ -760,7 +760,7 @@ dependencies = [
 [[package]]
 name = "druid-widget-nursery"
 version = "0.1.0"
-source = "git+https://github.com/linebender/druid-widget-nursery#b60a44d438d11d005d0cdab9f85afcb9532b57bd"
+source = "git+https://github.com/xarvic/druid-widget-nursery?branch=fix_enum_switcher#e0d36077450cfcc5f8117aef4ba459e0e526a5f0"
 dependencies = [
  "druid",
  "log",

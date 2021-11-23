@@ -9,7 +9,7 @@ mod data;
 mod ui;
 mod util;
 
-use data::{View, LOGIN_TX};
+use data::{AppState, LOGIN_TX};
 
 fn main() -> Result<(), PlatformError> {
     tracing_subscriber::fmt::init();
@@ -28,9 +28,14 @@ fn main() -> Result<(), PlatformError> {
         .configure_env(move |env, _state| env.set(LOGIN_TX, login_tx.clone()));
     let event_sink = launcher.get_external_handle();
 
-    let view = if config.session.is_some() { View::Loading } else { View::Login };
+    let initial_state = if config.session.is_some() {
+        AppState::LoggingIn
+    } else {
+        AppState::Login(Default::default())
+    };
+
     tokio::spawn(bg::main(config, login_rx, event_sink));
-    launcher.launch(data::AppState::new(view))?;
+    launcher.launch(initial_state)?;
 
     // After the GUI is closed, shut down all pending async tasks.
     rt.shutdown_timeout(Duration::from_secs(5));
