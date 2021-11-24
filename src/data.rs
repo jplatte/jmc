@@ -24,21 +24,14 @@ pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct AppState {
-    pub view: View,
+    pub logged_in: bool,
     pub login_state: LoginState,
     pub user_state: Option<UserState>,
 }
 
-#[derive(Clone, Copy, PartialEq, druid::Data)]
-pub enum View {
-    Login,
-    Loading,
-    Main,
-}
-
 impl AppState {
-    pub fn new(view: View) -> Self {
-        Self { view, login_state: Default::default(), user_state: None }
+    pub fn new(logged_in: bool) -> Self {
+        Self { logged_in, login_state: Default::default(), user_state: None }
     }
 }
 

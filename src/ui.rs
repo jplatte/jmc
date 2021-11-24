@@ -1,11 +1,10 @@
 pub mod actions;
 
 use druid::{
-    lens,
     widget::{
         Align, Button, Flex, Label, List, Maybe, Padding, Scroll, Split, TextBox, ViewSwitcher,
     },
-    Command, LensExt as _, Target, Widget, WidgetExt as _,
+    Command, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use tracing::error;
@@ -15,25 +14,22 @@ use self::actions::{
 };
 use crate::data::{
     ActiveRoomState, AppState, EventState, EventTypeState, LoginState, MinRoomState, UserState,
-    View, LOGIN_TX,
+    LOGIN_TX,
 };
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
     ViewSwitcher::<AppState, _>::new(
-        |state, _| state.view,
-        |view, _, _| match view {
-            View::Login => login_screen().lens(AppState::login_state).boxed(),
-            View::Loading => loading().lens(lens::Unit).boxed(),
-            View::Main => main_ui()
-                .lens(AppState::user_state.map(
-                    |state| state.clone().unwrap(),
-                    |state_a, state_b| *state_a = Some(state_b),
-                ))
-                .boxed(),
+        |state, _| state.logged_in,
+        |&logged_in, _, _| {
+            if logged_in {
+                Maybe::new(main_ui, loading).lens(AppState::user_state).boxed()
+            } else {
+                login_screen().lens(AppState::login_state).boxed()
+            }
         },
     )
     .on_command(FINISH_LOGIN, |ctx, user_data, state| {
-        state.view = View::Main;
+        state.logged_in = true;
         state.login_state = Default::default();
         state.user_state = Some(user_data.into());
         ctx.set_handled();

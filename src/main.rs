@@ -27,11 +27,9 @@ fn main() -> Result<(), PlatformError> {
         .configure_env(move |env, _state| env.set(LOGIN_TX, login_tx.clone()));
     let event_sink = launcher.get_external_handle();
 
-    let initial_view =
-        if config.session.is_some() { data::View::Loading } else { data::View::Login };
-
+    let logged_in = config.session.is_some();
     tokio::spawn(bg::main(config, login_rx, event_sink));
-    launcher.launch(data::AppState::new(initial_view))?;
+    launcher.launch(data::AppState::new(logged_in))?;
 
     // After the GUI is closed, shut down all pending async tasks.
     rt.shutdown_timeout(Duration::from_secs(5));
