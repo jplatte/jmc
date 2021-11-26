@@ -1,17 +1,9 @@
-use std::convert::Infallible;
-
 use druid::Selector;
-use matrix_sdk::{ruma::RoomId, Client as MatrixClient};
-use task_group::TaskGroup;
+use matrix_sdk::ruma::RoomId;
 
 use crate::data::{EventState, MinRoomState};
 
-pub struct UserData {
-    pub mtx_client: MatrixClient,
-    pub task_group: TaskGroup<Infallible>,
-}
-
-pub const FINISH_LOGIN: Selector<UserData> = Selector::new("finish-login");
+pub const FINISH_LOGIN: Selector<()> = Selector::new("finish-login");
 
 pub const ADD_OR_UPDATE_ROOM: Selector<MinRoomState> = Selector::new("add-room");
 pub const ADD_OR_UPDATE_ROOMS: Selector<Vec<MinRoomState>> = Selector::new("add-rooms");

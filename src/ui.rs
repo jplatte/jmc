@@ -1,6 +1,7 @@
 pub mod actions;
 
 use druid::{
+    lens,
     widget::{
         Align, Button, Flex, Label, List, Maybe, Padding, Scroll, Split, TextBox, ViewSwitcher,
     },
@@ -14,24 +15,21 @@ use self::actions::{
 };
 use crate::data::{
     ActiveRoomState, AppState, EventState, EventTypeState, LoginState, MinRoomState, UserState,
-    LOGIN_TX,
+    View, LOGIN_TX,
 };
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
     ViewSwitcher::<AppState, _>::new(
-        |state, _| state.logged_in,
-        |&logged_in, _, _| {
-            if logged_in {
-                Maybe::new(main_ui, loading).lens(AppState::user_state).boxed()
-            } else {
-                login_screen().lens(AppState::login_state).boxed()
-            }
+        |state, _| state.view,
+        |view, _, _| match view {
+            View::Login => login_screen().lens(AppState::login_state).boxed(),
+            View::Loading => loading().lens(lens::Unit).boxed(),
+            View::LoggedIn => main_ui().lens(AppState::user_state).boxed(),
         },
     )
-    .on_command(FINISH_LOGIN, |ctx, user_data, state| {
-        state.logged_in = true;
+    .on_command(FINISH_LOGIN, |ctx, _, state| {
+        state.view = View::LoggedIn;
         state.login_state = Default::default();
-        state.user_state = Some(user_data.into());
         ctx.set_handled();
     })
 }

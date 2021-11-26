@@ -1,4 +1,4 @@
-use std::ops::ControlFlow;
+use std::{convert::Infallible, ops::ControlFlow};
 
 use anyhow::bail;
 use druid::Target;
@@ -21,7 +21,7 @@ use tracing::error;
 use crate::{
     config::{self, Config, CONFIG_DIR_PATH},
     data::{LoginState, MinRoomState},
-    ui::actions::{UserData, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
+    ui::actions::{ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
 };
 
 pub mod event_handlers;
@@ -99,9 +99,10 @@ async fn logged_in_main(
     mtx_client: MatrixClient,
     ui_handle: druid::ExtEventSink,
 ) -> ControlFlow<(), State> {
-    let (task_group, _task_manager) = TaskGroup::new();
-    let user_data = UserData { mtx_client: mtx_client.clone(), task_group };
-    if let Err(e) = ui_handle.submit_command(FINISH_LOGIN, user_data, Target::Auto) {
+    let (_task_group, _task_manager) = TaskGroup::<Infallible>::new();
+    // FIXME: Somehow add task_group, mtx_client to druid Env
+    // Otherwise could use `OnceCell` but that only works easily as long as there is no logout
+    if let Err(e) = ui_handle.submit_command(FINISH_LOGIN, (), Target::Auto) {
         error!("{}", e);
     }
 

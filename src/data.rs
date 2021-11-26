@@ -1,4 +1,4 @@
-use std::{convert::Infallible, io::Cursor, sync::Arc};
+use std::{io::Cursor, sync::Arc};
 
 use druid::{im::OrdMap, image::io::Reader as ImageReader, ImageBuf, Key};
 use matrix_sdk::{
@@ -8,30 +8,32 @@ use matrix_sdk::{
         api::client::r0::media::get_content_thumbnail::Method as ResizeMethod,
         events::room::message::SyncRoomMessageEvent, uint,
     },
-    Client as MatrixClient,
 };
-use task_group::TaskGroup;
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 
-use crate::{
-    ui::actions::UserData,
-    util::{EventIdArc, RoomIdArc},
-};
+use crate::util::{EventIdArc, RoomIdArc};
 
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct AppState {
-    pub logged_in: bool,
+    pub view: View,
     pub login_state: LoginState,
-    pub user_state: Option<UserState>,
+    pub user_state: UserState,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, druid::Data)]
+pub enum View {
+    Login,
+    Loading,
+    LoggedIn,
 }
 
 impl AppState {
-    pub fn new(logged_in: bool) -> Self {
-        Self { logged_in, login_state: Default::default(), user_state: None }
+    pub fn new(view: View) -> Self {
+        Self { view, login_state: Default::default(), user_state: Default::default() }
     }
 }
 
@@ -41,30 +43,10 @@ pub struct LoginState {
     pub password: Arc<String>,
 }
 
-#[derive(Clone, druid::Data, druid::Lens)]
+#[derive(Clone, Default, druid::Data, druid::Lens)]
 pub struct UserState {
     pub rooms: OrdMap<RoomIdArc, MinRoomState>, // For the sidebar
     pub active_room: Option<ActiveRoomState>,
-
-    // FIXME: Use Env for these as well
-    #[data(ignore)]
-    #[lens(ignore)]
-    pub mtx_client: MatrixClient,
-
-    #[data(ignore)]
-    #[lens(ignore)]
-    pub task_group: TaskGroup<Infallible>,
-}
-
-impl From<&UserData> for UserState {
-    fn from(data: &UserData) -> Self {
-        Self {
-            rooms: Default::default(),
-            active_room: None,
-            mtx_client: data.mtx_client.clone(),
-            task_group: data.task_group.clone(),
-        }
-    }
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]

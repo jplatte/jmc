@@ -1,6 +1,5 @@
 use std::{sync::Arc, time::Duration};
 
-use data::LOGIN_TX;
 use druid::{AppLauncher, PlatformError, WindowDesc};
 use tokio::{runtime::Runtime, sync::mpsc};
 
@@ -9,6 +8,8 @@ mod config;
 mod data;
 mod ui;
 mod util;
+
+use data::{View, LOGIN_TX};
 
 fn main() -> Result<(), PlatformError> {
     tracing_subscriber::fmt::init();
@@ -27,9 +28,9 @@ fn main() -> Result<(), PlatformError> {
         .configure_env(move |env, _state| env.set(LOGIN_TX, login_tx.clone()));
     let event_sink = launcher.get_external_handle();
 
-    let logged_in = config.session.is_some();
+    let view = if config.session.is_some() { View::Loading } else { View::Login };
     tokio::spawn(bg::main(config, login_rx, event_sink));
-    launcher.launch(data::AppState::new(logged_in))?;
+    launcher.launch(data::AppState::new(view))?;
 
     // After the GUI is closed, shut down all pending async tasks.
     rt.shutdown_timeout(Duration::from_secs(5));
