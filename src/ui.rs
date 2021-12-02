@@ -1,5 +1,7 @@
 pub mod actions;
 
+use std::sync::Arc;
+
 use druid::{
     lens,
     widget::{
@@ -103,6 +105,7 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(Scroll::new(
             List::new(make_timeline_item).with_spacing(2.0).lens(ActiveRoomState::timeline),
         ))
+        .with_child(message_input_area().lens(ActiveRoomState::message_input))
         .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
             if *state.id == *room_id {
                 state.timeline.insert(event.event_id.clone(), event.clone());
@@ -114,4 +117,8 @@ fn make_timeline_item() -> impl Widget<EventState> {
     Label::new(|state: &EventState, _env: &_| match &state.event_type {
         EventTypeState::RoomMessage { display_string } => display_string.clone(),
     })
+}
+
+fn message_input_area() -> impl Widget<Arc<String>> {
+    TextBox::new()
 }

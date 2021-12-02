@@ -96,11 +96,17 @@ pub struct ActiveRoomState {
     pub id: RoomIdArc,
     pub display_name: String,
     pub timeline: OrdMap<EventIdArc, EventState>,
+    pub message_input: Arc<String>,
 }
 
 impl From<&MinRoomState> for ActiveRoomState {
     fn from(st: &MinRoomState) -> Self {
-        Self { id: st.id.clone(), display_name: st.display_name.clone(), timeline: OrdMap::new() }
+        Self {
+            id: st.id.clone(),
+            display_name: st.display_name.clone(),
+            timeline: OrdMap::new(),
+            message_input: Default::default(),
+        }
     }
 }
 
