@@ -43,7 +43,7 @@ pub async fn on_room_message(
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
     if let Err(e) =
-        ui_handle.submit_command(ADD_EVENT, (room.room_id().to_owned(), event.into()), Target::Auto)
+        ui_handle.submit_command(ADD_EVENT, (room.room_id().into(), event.into()), Target::Auto)
     {
         error!("{}", e);
     }

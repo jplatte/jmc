@@ -107,7 +107,7 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         ))
         .with_child(message_input_area().lens(ActiveRoomState::message_input))
         .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
-            if *state.id == *room_id {
+            if *state.id == **room_id {
                 state.timeline.insert(event.event_id.clone(), event.clone());
             }
         })

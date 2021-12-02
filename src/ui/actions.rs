@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use druid::Selector;
 use matrix_sdk::ruma::RoomId;
 
@@ -10,4 +12,4 @@ pub const ADD_OR_UPDATE_ROOMS: Selector<Vec<MinRoomState>> = Selector::new("add-
 
 pub const SET_ACTIVE_ROOM: Selector<MinRoomState> = Selector::new("set-active-room");
 
-pub const ADD_EVENT: Selector<(RoomId, EventState)> = Selector::new("add-event");
+pub const ADD_EVENT: Selector<(Arc<RoomId>, EventState)> = Selector::new("add-event");

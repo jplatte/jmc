@@ -19,15 +19,15 @@ impl Deref for EventIdArc {
     }
 }
 
-impl From<EventId> for EventIdArc {
-    fn from(room_id: EventId) -> Self {
-        Self(room_id.into())
-    }
-}
-
 impl From<&EventId> for EventIdArc {
     fn from(room_id: &EventId) -> Self {
         Self(room_id.to_owned().into())
+    }
+}
+
+impl From<Box<EventId>> for EventIdArc {
+    fn from(room_id: Box<EventId>) -> Self {
+        Self(room_id.into())
     }
 }
 
@@ -60,15 +60,15 @@ impl Deref for RoomIdArc {
     }
 }
 
-impl From<RoomId> for RoomIdArc {
-    fn from(room_id: RoomId) -> Self {
-        Self(room_id.into())
-    }
-}
-
 impl From<&RoomId> for RoomIdArc {
     fn from(room_id: &RoomId) -> Self {
         Self(room_id.to_owned().into())
+    }
+}
+
+impl From<Box<RoomId>> for RoomIdArc {
+    fn from(room_id: Box<RoomId>) -> Self {
+        Self(room_id.into())
     }
 }
 
