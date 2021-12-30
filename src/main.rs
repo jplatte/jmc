@@ -1,9 +1,6 @@
-use std::{convert::Infallible, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use druid::{AppLauncher, PlatformError, WindowDesc};
-use matrix_sdk::Client as MatrixClient;
-use once_cell::sync::OnceCell;
-use task_group::TaskGroup;
 use tokio::{runtime::Runtime, sync::mpsc};
 
 mod bg;
@@ -13,9 +10,6 @@ mod ui;
 mod util;
 
 use data::{View, LOGIN_TX};
-
-static MTX_CLIENT: OnceCell<MatrixClient> = OnceCell::new();
-static TASK_GROUP: OnceCell<TaskGroup<Infallible>> = OnceCell::new();
 
 fn main() -> Result<(), PlatformError> {
     tracing_subscriber::fmt::init();

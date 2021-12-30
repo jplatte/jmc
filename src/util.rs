@@ -12,10 +12,10 @@ impl fmt::Display for EventIdArc {
 }
 
 impl Deref for EventIdArc {
-    type Target = EventId;
+    type Target = Arc<EventId>;
 
     fn deref(&self) -> &Self::Target {
-        &*self.0
+        &self.0
     }
 }
 
@@ -53,10 +53,10 @@ impl fmt::Display for RoomIdArc {
 }
 
 impl Deref for RoomIdArc {
-    type Target = RoomId;
+    type Target = Arc<RoomId>;
 
     fn deref(&self) -> &Self::Target {
-        &*self.0
+        &self.0
     }
 }
 

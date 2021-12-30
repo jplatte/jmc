@@ -14,7 +14,6 @@ use matrix_sdk::{
     },
     Client as MatrixClient, Session,
 };
-use task_group::TaskGroup;
 use tokio::{fs, sync::mpsc::Receiver, task};
 use tracing::error;
 
@@ -22,7 +21,6 @@ use crate::{
     config::{self, Config, CONFIG_DIR_PATH},
     data::{LoginState, MinRoomState},
     ui::actions::{ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
-    MTX_CLIENT, TASK_GROUP,
 };
 
 pub mod event_handlers;
@@ -100,20 +98,15 @@ async fn logged_in_main(
     mtx_client: MatrixClient,
     ui_handle: druid::ExtEventSink,
 ) -> ControlFlow<(), State> {
-    let (task_group, _task_manager) = TaskGroup::new();
-
-    let _ = MTX_CLIENT.set(mtx_client.clone());
-    let _ = TASK_GROUP.set(task_group);
-
     if let Err(e) = ui_handle.submit_command(FINISH_LOGIN, (), Target::Auto) {
         error!("{}", e);
     }
 
-    let joined_rooms = mtx_client.joined_rooms();
+    let joined_rooms = mtx_client.rooms();
     if !joined_rooms.is_empty() {
         let mut rooms = Vec::new();
         for r in joined_rooms {
-            rooms.push(MinRoomState::new(&r).await);
+            rooms.push(MinRoomState::new(r).await);
         }
 
         if let Err(e) = ui_handle.submit_command(ADD_OR_UPDATE_ROOMS, rooms, Target::Auto) {

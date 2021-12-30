@@ -3,11 +3,12 @@ use std::{io::Cursor, sync::Arc};
 use druid::{im::OrdMap, image::io::Reader as ImageReader, ImageBuf, Key};
 use matrix_sdk::{
     media::{MediaFormat, MediaThumbnailSize},
-    room,
+    room::{self, Room},
     ruma::{
         api::client::r0::media::get_content_thumbnail::Method as ResizeMethod,
         events::room::message::SyncRoomMessageEvent, uint,
     },
+    uuid::Uuid,
 };
 use tokio::sync::mpsc::Sender;
 use tracing::error;
@@ -52,17 +53,20 @@ pub struct UserState {
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct MinRoomState {
     pub id: RoomIdArc,
-    pub display_name: String,
+    pub display_name: Arc<str>,
     pub icon: Option<ImageBuf>,
+
+    #[data(ignore)]
+    pub room: Room,
 }
 
 impl MinRoomState {
-    pub async fn new(room: &room::Common) -> Self {
+    pub async fn new(room: Room) -> Self {
         let display_name = match room.display_name().await {
-            Ok(name) => name,
+            Ok(name) => name.into(),
             Err(e) => {
                 error!("Failed to compute room display name: {}", e);
-                "<error>".to_owned()
+                "<error>".into()
             }
         };
 
@@ -87,47 +91,79 @@ impl MinRoomState {
                 }
             });
 
-        Self { id: room.room_id().into(), display_name, icon }
+        Self { id: room.room_id().into(), display_name, icon, room }
     }
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct ActiveRoomState {
     pub id: RoomIdArc,
-    pub display_name: String,
-    pub timeline: OrdMap<EventIdArc, EventState>,
-    pub message_input: Arc<String>,
+    pub display_name: Arc<str>,
+    pub timeline: OrdMap<EventOrTxnId, EventState>,
+    pub kind: Option<JoinedRoomState>,
 }
 
 impl From<&MinRoomState> for ActiveRoomState {
     fn from(st: &MinRoomState) -> Self {
+        let kind = match &st.room {
+            Room::Joined(joined) => {
+                Some(JoinedRoomState { message_input: Default::default(), room: joined.to_owned() })
+            }
+            Room::Left(_) => None,
+            Room::Invited(_) => None,
+        };
+
         Self {
             id: st.id.clone(),
             display_name: st.display_name.clone(),
             timeline: OrdMap::new(),
-            message_input: Default::default(),
+            kind,
         }
     }
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct EventState {
-    pub event_id: EventIdArc,
+    pub id: EventOrTxnId,
     pub event_type: EventTypeState,
 }
 
 #[derive(Clone, druid::Data)]
 pub enum EventTypeState {
-    RoomMessage { display_string: String },
+    RoomMessage { display_string: Arc<str> },
 }
 
 impl From<SyncRoomMessageEvent> for EventState {
     fn from(ev: SyncRoomMessageEvent) -> Self {
         Self {
-            event_id: ev.event_id.into(),
+            id: EventOrTxnId::EventId(ev.event_id.into()),
             event_type: EventTypeState::RoomMessage {
-                display_string: ev.content.msgtype.body().to_owned(),
+                display_string: ev.content.msgtype.body().into(),
             },
         }
     }
 }
+
+//#[derive(Clone, druid::Data)]
+//pub enum RoomKindState {
+//    Joined(JoinedRoomState),
+//    Left(LeftRoomState),
+//    Invited(InvitedRoomState),
+//}
+
+#[derive(Clone, druid::Data, druid::Lens)]
+pub struct JoinedRoomState {
+    pub message_input: Arc<String>,
+
+    #[data(ignore)]
+    pub room: room::Joined,
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
+pub enum EventOrTxnId {
+    EventId(EventIdArc),
+    TxnId(UuidWrap),
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
+pub struct UuidWrap(#[data(eq)] pub Uuid);
