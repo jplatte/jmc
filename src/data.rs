@@ -99,6 +99,7 @@ impl MinRoomState {
 pub struct ActiveRoomState {
     pub id: RoomIdArc,
     pub display_name: Arc<str>,
+    // FIXME: Find an alternative that works similar to IndexMap
     pub timeline: OrdMap<EventOrTxnId, EventState>,
     pub kind: Option<JoinedRoomState>,
 }
