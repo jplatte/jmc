@@ -5,6 +5,12 @@ use matrix_sdk::ruma::{EventId, RoomId};
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub struct EventIdArc(#[data(eq)] Arc<EventId>);
 
+impl fmt::Debug for EventIdArc {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 impl fmt::Display for EventIdArc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)

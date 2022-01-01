@@ -12,7 +12,7 @@ use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uui
 use tracing::error;
 
 use self::actions::{
-    ADD_EVENT, ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, SET_ACTIVE_ROOM,
+    ADD_EVENT, ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, REMOVE_EVENT, SET_ACTIVE_ROOM,
 };
 use crate::data::{
     ActiveRoomState, AppState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
@@ -106,8 +106,19 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         ))
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
+            dbg!("ADD_EVENT");
+
             if *state.id == *room_id {
-                state.timeline.insert(event.id.clone(), event.to_owned());
+                state.timeline.push_back(event.to_owned());
+            }
+        })
+        .on_command(REMOVE_EVENT, |_ctx, id, state| {
+            dbg!("REMOVE_EVENT");
+
+            if let Some(idx) = state.timeline.iter().position(|ev| ev.id == *id) {
+                state.timeline.remove(idx);
+            } else {
+                error!("Can't remove event {:?}", id);
             }
         })
 }

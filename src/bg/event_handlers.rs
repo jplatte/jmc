@@ -5,12 +5,13 @@ use matrix_sdk::{
     ruma::events::room::{
         create::SyncRoomCreateEvent, message::SyncRoomMessageEvent, name::SyncRoomNameEvent,
     },
+    uuid::Uuid,
 };
 use tracing::error;
 
 use crate::{
-    data::MinRoomState,
-    ui::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM},
+    data::{EventOrTxnId, MinRoomState, UuidWrap},
+    ui::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, REMOVE_EVENT},
 };
 
 pub async fn on_room_create(
@@ -42,6 +43,21 @@ pub async fn on_room_message(
     room: Room,
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
+    if let Some(txn_id) = &event.unsigned.transaction_id {
+        match txn_id.parse::<Uuid>() {
+            Ok(txn_id) => {
+                if let Err(e) = ui_handle.submit_command(
+                    REMOVE_EVENT,
+                    EventOrTxnId::TxnId(UuidWrap(txn_id)),
+                    Target::Auto,
+                ) {
+                    error!("{}", e);
+                }
+            }
+            Err(e) => error!("{}", e),
+        }
+    }
+
     if let Err(e) =
         ui_handle.submit_command(ADD_EVENT, (room.room_id().into(), event.into()), Target::Auto)
     {

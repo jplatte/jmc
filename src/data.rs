@@ -1,6 +1,10 @@
-use std::{io::Cursor, sync::Arc};
+use std::{fmt, io::Cursor, sync::Arc};
 
-use druid::{im::OrdMap, image::io::Reader as ImageReader, ImageBuf, Key};
+use druid::{
+    im::{OrdMap, Vector},
+    image::io::Reader as ImageReader,
+    ImageBuf, Key,
+};
 use matrix_sdk::{
     media::{MediaFormat, MediaThumbnailSize},
     room::{self, Room},
@@ -100,7 +104,7 @@ pub struct ActiveRoomState {
     pub id: RoomIdArc,
     pub display_name: Arc<str>,
     // FIXME: Find an alternative that works similar to IndexMap
-    pub timeline: OrdMap<EventOrTxnId, EventState>,
+    pub timeline: Vector<EventState>,
     pub kind: Option<JoinedRoomState>,
 }
 
@@ -117,7 +121,7 @@ impl From<&MinRoomState> for ActiveRoomState {
         Self {
             id: st.id.clone(),
             display_name: st.display_name.clone(),
-            timeline: OrdMap::new(),
+            timeline: Vector::new(),
             kind,
         }
     }
@@ -160,7 +164,7 @@ pub struct JoinedRoomState {
     pub room: room::Joined,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub enum EventOrTxnId {
     EventId(EventIdArc),
     TxnId(UuidWrap),
@@ -168,3 +172,9 @@ pub enum EventOrTxnId {
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub struct UuidWrap(#[data(eq)] pub Uuid);
+
+impl fmt::Debug for UuidWrap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
