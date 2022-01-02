@@ -3,17 +3,16 @@ pub mod actions;
 use druid::{
     lens,
     widget::{
-        Align, Button, Flex, Label, List, Maybe, Padding, Scroll, Split, TextBox, ViewSwitcher,
+        Align, Button, Controller, Flex, Image, Label, List, Maybe, Padding, Scroll, Split,
+        TextBox, ViewSwitcher,
     },
-    Color, Command, Target, Widget, WidgetExt as _,
+    Color, Command, ImageBuf, Size, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
 use tracing::error;
 
-use self::actions::{
-    ADD_EVENT, ADD_OR_UPDATE_ROOM, ADD_OR_UPDATE_ROOMS, FINISH_LOGIN, REMOVE_EVENT, SET_ACTIVE_ROOM,
-};
+use self::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, FINISH_LOGIN, REMOVE_EVENT, SET_ACTIVE_ROOM};
 use crate::data::{
     ActiveRoomState, AppState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
     LoginState, MinRoomState, UserState, UuidWrap, View, LOGIN_TX,
@@ -67,7 +66,7 @@ fn main_ui() -> impl Widget<UserState> {
     );
 
     Split::columns(rooms_sidebar(), right_pane.lens(UserState::active_room))
-        .min_size(200.0, 400.0)
+        .min_size(32.0, 400.0)
         .split_point(0.0)
         .solid_bar(true)
         .bar_size(1.0)
@@ -83,19 +82,53 @@ fn rooms_sidebar() -> impl Widget<UserState> {
     .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
         state.rooms.insert(room_state.id.clone(), room_state.clone());
     })
-    .on_command(ADD_OR_UPDATE_ROOMS, |_ctx, rooms, state| {
-        state
-            .rooms
-            .extend(rooms.iter().map(|room_state| (room_state.id.clone(), room_state.clone())));
-    })
 }
 
 fn make_room_item() -> impl Widget<MinRoomState> {
-    Label::new(|state: &MinRoomState, _env: &_| state.display_name.clone()).on_click(
-        |ctx, state, _env| {
+    Image::new(ImageBuf::empty())
+        .controller(RoomItemController)
+        //.on_added(|image, _ctx, state: &MinRoomState, _env| {
+        //    image.set_image_data(state.icon.clone());
+        //})
+        .on_click(|ctx, state, _env| {
             ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto))
-        },
-    )
+        })
+    // FIXME: Tooltip widget is rather broken (not positioned correctly, can be focused)
+    //.tooltip(|state: &MinRoomState, _env: &_| state.display_name.clone())
+}
+
+struct RoomItemController;
+
+impl Controller<MinRoomState, Image> for RoomItemController {
+    fn lifecycle(
+        &mut self,
+        child: &mut Image,
+        ctx: &mut druid::LifeCycleCtx,
+        event: &druid::LifeCycle,
+        data: &MinRoomState,
+        env: &druid::Env,
+    ) {
+        if let druid::LifeCycle::WidgetAdded = event {
+            child.set_image_data(data.icon.clone());
+        }
+
+        child.lifecycle(ctx, event, data, env);
+    }
+
+    fn update(
+        &mut self,
+        child: &mut Image,
+        ctx: &mut druid::UpdateCtx,
+        old_data: &MinRoomState,
+        data: &MinRoomState,
+        env: &druid::Env,
+    ) {
+        if data.icon.size() != Size::ZERO {
+            child.set_image_data(data.icon.clone());
+        }
+
+        child.update(ctx, old_data, data, env);
+    }
 }
 
 fn room_view() -> impl Widget<ActiveRoomState> {
@@ -106,15 +139,11 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         ))
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
-            dbg!("ADD_EVENT");
-
             if *state.id == *room_id {
                 state.timeline.push_back(event.to_owned());
             }
         })
         .on_command(REMOVE_EVENT, |_ctx, id, state| {
-            dbg!("REMOVE_EVENT");
-
             if let Some(idx) = state.timeline.iter().position(|ev| ev.id == *id) {
                 state.timeline.remove(idx);
             } else {

@@ -20,7 +20,7 @@ use tracing::error;
 use crate::{
     config::{self, Config, CONFIG_DIR_PATH},
     data::{LoginState, MinRoomState},
-    ui::actions::{ADD_OR_UPDATE_ROOMS, FINISH_LOGIN},
+    ui::actions::{ADD_OR_UPDATE_ROOM, FINISH_LOGIN},
 };
 
 pub mod event_handlers;
@@ -102,17 +102,25 @@ async fn logged_in_main(
         error!("{}", e);
     }
 
-    let joined_rooms = mtx_client.rooms();
-    if !joined_rooms.is_empty() {
-        let mut rooms = Vec::new();
-        for r in joined_rooms {
-            rooms.push(MinRoomState::new(r).await);
-        }
+    task::spawn({
+        let ui_handle = ui_handle.clone();
+        let mtx_client = mtx_client.clone();
 
-        if let Err(e) = ui_handle.submit_command(ADD_OR_UPDATE_ROOMS, rooms, Target::Auto) {
-            error!("{}", e);
+        async move {
+            let joined_rooms = mtx_client.rooms();
+
+            if !joined_rooms.is_empty() {
+                for r in joined_rooms {
+                    let room_state = MinRoomState::new(r).await;
+                    if let Err(e) =
+                        ui_handle.submit_command(ADD_OR_UPDATE_ROOM, room_state, Target::Auto)
+                    {
+                        error!("{}", e);
+                    }
+                }
+            }
         }
-    }
+    });
 
     let filter = assign!(FilterDefinition::default(), {
         room: assign!(RoomFilter::default(), {

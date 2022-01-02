@@ -14,7 +14,7 @@ use matrix_sdk::{
     },
     uuid::Uuid,
 };
-use tokio::sync::mpsc::Sender;
+use tokio::{sync::mpsc::Sender, task};
 use tracing::error;
 
 use crate::util::{EventIdArc, RoomIdArc};
@@ -58,13 +58,14 @@ pub struct UserState {
 pub struct MinRoomState {
     pub id: RoomIdArc,
     pub display_name: Arc<str>,
-    pub icon: Option<ImageBuf>,
+    pub icon: ImageBuf,
 
     #[data(ignore)]
     pub room: Room,
 }
 
 impl MinRoomState {
+    // FIXME: Don't grab the icon here as this makes the first load of the room list rather slow
     pub async fn new(room: Room) -> Self {
         let display_name = match room.display_name().await {
             Ok(name) => name.into(),
@@ -86,17 +87,30 @@ impl MinRoomState {
                 None
             }
         };
-        let icon =
-            icon_bytes.and_then(|bytes| match ImageReader::new(Cursor::new(bytes)).decode() {
-                Ok(image) => Some(ImageBuf::from_dynamic_image(image)),
+        let icon = match icon_bytes {
+            Some(bytes) => match decode_image(bytes).await {
+                Ok(image) => image,
                 Err(e) => {
                     error!("Failed to decode room icon: {}", e);
-                    None
+                    ImageBuf::empty()
                 }
-            });
+            },
+            None => ImageBuf::empty(),
+        };
 
         Self { id: room.room_id().into(), display_name, icon, room }
     }
+}
+
+async fn decode_image(bytes: Vec<u8>) -> anyhow::Result<ImageBuf> {
+    task::spawn_blocking(move || {
+        let cursor = Cursor::new(bytes);
+        let reader = ImageReader::new(cursor).with_guessed_format()?;
+        let image = reader.decode()?;
+
+        Ok(ImageBuf::from_dynamic_image(image))
+    })
+    .await?
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
