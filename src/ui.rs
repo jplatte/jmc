@@ -6,7 +6,7 @@ use druid::{
         Align, Button, Controller, Flex, Image, Label, List, Maybe, Padding, Scroll, Split,
         TextBox, ViewSwitcher,
     },
-    Color, Command, ImageBuf, Size, Target, Widget, WidgetExt as _,
+    Color, Command, Size, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
@@ -66,7 +66,7 @@ fn main_ui() -> impl Widget<UserState> {
     );
 
     Split::columns(rooms_sidebar(), right_pane.lens(UserState::active_room))
-        .min_size(32.0, 400.0)
+        .min_size(200.0, 400.0)
         .split_point(0.0)
         .solid_bar(true)
         .bar_size(1.0)
@@ -81,11 +81,12 @@ fn rooms_sidebar() -> impl Widget<UserState> {
 }
 
 fn make_room_item() -> impl Widget<MinRoomState> {
-    Image::new(ImageBuf::empty())
+    //Image::new(ImageBuf::empty())
+    Label::new(|data: &MinRoomState, _env: &_| data.display_name.clone())
         //.controller(RoomItemController)
-        .on_added(|image, _ctx, state: &MinRoomState, _env| {
-            image.set_image_data(state.icon.clone());
-        })
+        //.on_added(|image, _ctx, state: &MinRoomState, _env| {
+        //    image.set_image_data(state.icon.clone());
+        //})
         .on_click(|ctx, state, _env| {
             ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto));
         })
@@ -132,9 +133,13 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
         .with_flex_child(
             Scroll::new(
-                List::new(make_timeline_item).with_spacing(2.0).lens(ActiveRoomState::timeline),
+                List::new(make_timeline_item)
+                    .with_spacing(2.0)
+                    .expand_width()
+                    .lens(ActiveRoomState::timeline),
             )
-            .vertical(),
+            .vertical()
+            .expand_height(),
             1.0,
         )
         .with_child(message_input_area())
@@ -169,33 +174,41 @@ fn message_input_area() -> impl Widget<ActiveRoomState> {
 }
 
 fn active_input_area() -> impl Widget<JoinedRoomState> {
-    Flex::row()
-        .with_child(
-            TextBox::new().with_placeholder("Send message…").lens(JoinedRoomState::message_input),
-        )
-        .with_child(Button::<JoinedRoomState>::new("➤").on_click(|ctx, state, _env| {
-            let room = state.room.clone();
-            let message_input = state.message_input.clone();
-            let ui_handle = ctx.get_external_handle();
+    Padding::new(
+        (10.0, 6.0),
+        Flex::row()
+            .with_flex_child(
+                TextBox::new()
+                    .with_placeholder("Send message…")
+                    .expand_width()
+                    .lens(JoinedRoomState::message_input),
+                1.0,
+            )
+            .with_default_spacer()
+            .with_child(Button::<JoinedRoomState>::new("➤").on_click(|ctx, state, _env| {
+                let room = state.room.clone();
+                let message_input = state.message_input.clone();
+                let ui_handle = ctx.get_external_handle();
 
-            tokio::spawn(async move {
-                let msg = RoomMessageEventContent::text_markdown(message_input.as_str());
-                let display_string = msg.body().into();
+                tokio::spawn(async move {
+                    let msg = RoomMessageEventContent::text_markdown(message_input.as_str());
+                    let display_string = msg.body().into();
 
-                let txn_id = Uuid::new_v4();
+                    let txn_id = Uuid::new_v4();
 
-                let event_state = EventState {
-                    id: EventOrTxnId::TxnId(UuidWrap(txn_id)),
-                    event_type: EventTypeState::RoomMessage { display_string },
-                };
-                let event = (room.room_id().into(), event_state);
+                    let event_state = EventState {
+                        id: EventOrTxnId::TxnId(UuidWrap(txn_id)),
+                        event_type: EventTypeState::RoomMessage { display_string },
+                    };
+                    let event = (room.room_id().into(), event_state);
 
-                if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
-                    error!("{}", e);
-                }
+                    if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
+                        error!("{}", e);
+                    }
 
-                // FIXME: Handle error
-                let _ = room.send(msg, Some(txn_id)).await;
-            });
-        }))
+                    // FIXME: Handle error
+                    let _ = room.send(msg, Some(txn_id)).await;
+                });
+            })),
+    )
 }

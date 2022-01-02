@@ -1,20 +1,15 @@
-use std::{fmt, io::Cursor, sync::Arc};
+use std::{fmt, sync::Arc};
 
 use druid::{
     im::{OrdMap, Vector},
-    image::io::Reader as ImageReader,
     ImageBuf, Key,
 };
 use matrix_sdk::{
-    media::{MediaFormat, MediaThumbnailSize},
     room::{self, Room},
-    ruma::{
-        api::client::r0::media::get_content_thumbnail::Method as ResizeMethod,
-        events::room::message::SyncRoomMessageEvent, uint,
-    },
+    ruma::events::room::message::SyncRoomMessageEvent,
     uuid::Uuid,
 };
-use tokio::{sync::mpsc::Sender, task};
+use tokio::sync::mpsc::Sender;
 use tracing::error;
 
 use crate::util::{EventIdArc, RoomIdArc};
@@ -75,32 +70,42 @@ impl MinRoomState {
             }
         };
 
-        let icon_format = MediaFormat::Thumbnail(MediaThumbnailSize {
-            method: ResizeMethod::Scale,
-            width: uint!(32),
-            height: uint!(32),
-        });
-        let icon_bytes = match room.avatar(icon_format).await {
-            Ok(b) => b,
-            Err(e) => {
-                error!("Failed to load room icon: {}", e);
-                None
-            }
-        };
-        let icon = match icon_bytes {
-            Some(bytes) => match decode_image(bytes).await {
-                Ok(image) => image,
-                Err(e) => {
-                    error!("Failed to decode room icon: {}", e);
-                    ImageBuf::empty()
-                }
-            },
-            None => ImageBuf::empty(),
-        };
-
-        Self { id: room.room_id().into(), display_name, icon, room }
+        Self { id: room.room_id().into(), display_name, icon: ImageBuf::empty(), room }
     }
 }
+
+/* fetching images (displaying is broken so this is not currently used)
+
+use druid::image::io::Reader as ImageReader;
+use matrix_sdk::{
+    media::{MediaFormat, MediaThumbnailSize},
+    ruma::{api::client::r0::media::get_content_thumbnail::Method as ResizeMethod, uint},
+};
+use std::io::Cursor;
+use tokio::task;
+
+let icon_format = MediaFormat::Thumbnail(MediaThumbnailSize {
+    method: ResizeMethod::Scale,
+    width: uint!(32),
+    height: uint!(32),
+});
+let icon_bytes = match room.avatar(icon_format).await {
+    Ok(b) => b,
+    Err(e) => {
+        error!("Failed to load room icon: {}", e);
+        None
+    }
+};
+let icon = match icon_bytes {
+    Some(bytes) => match decode_image(bytes).await {
+        Ok(image) => image,
+        Err(e) => {
+            error!("Failed to decode room icon: {}", e);
+            ImageBuf::empty()
+        }
+    },
+    None => ImageBuf::empty(),
+};
 
 async fn decode_image(bytes: Vec<u8>) -> anyhow::Result<ImageBuf> {
     task::spawn_blocking(move || {
@@ -112,6 +117,7 @@ async fn decode_image(bytes: Vec<u8>) -> anyhow::Result<ImageBuf> {
     })
     .await?
 }
+*/
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct ActiveRoomState {
