@@ -73,25 +73,21 @@ fn main_ui() -> impl Widget<UserState> {
 }
 
 fn rooms_sidebar() -> impl Widget<UserState> {
-    Scroll::new(
-        Flex::column()
-            .with_child(Label::new("<sidebar>"))
-            .with_child(List::new(make_room_item).with_spacing(6.0).lens(UserState::rooms)),
-    )
-    .vertical()
-    .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
-        state.rooms.insert(room_state.id.clone(), room_state.clone());
-    })
+    Scroll::new(List::new(make_room_item).with_spacing(6.0).lens(UserState::rooms))
+        .vertical()
+        .on_command(ADD_OR_UPDATE_ROOM, |_ctx, room_state, state| {
+            state.rooms.insert(room_state.id.clone(), room_state.clone());
+        })
 }
 
 fn make_room_item() -> impl Widget<MinRoomState> {
     Image::new(ImageBuf::empty())
-        .controller(RoomItemController)
-        //.on_added(|image, _ctx, state: &MinRoomState, _env| {
-        //    image.set_image_data(state.icon.clone());
-        //})
+        //.controller(RoomItemController)
+        .on_added(|image, _ctx, state: &MinRoomState, _env| {
+            image.set_image_data(state.icon.clone());
+        })
         .on_click(|ctx, state, _env| {
-            ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto))
+            ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto));
         })
     // FIXME: Tooltip widget is rather broken (not positioned correctly, can be focused)
     //.tooltip(|state: &MinRoomState, _env: &_| state.display_name.clone())
@@ -134,9 +130,13 @@ impl Controller<MinRoomState, Image> for RoomItemController {
 fn room_view() -> impl Widget<ActiveRoomState> {
     Flex::column()
         .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
-        .with_child(Scroll::new(
-            List::new(make_timeline_item).with_spacing(2.0).lens(ActiveRoomState::timeline),
-        ))
+        .with_flex_child(
+            Scroll::new(
+                List::new(make_timeline_item).with_spacing(2.0).lens(ActiveRoomState::timeline),
+            )
+            .vertical(),
+            1.0,
+        )
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
             if *state.id == *room_id {
