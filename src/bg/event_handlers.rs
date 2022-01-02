@@ -3,11 +3,13 @@ use matrix_sdk::{
     event_handler::Ctx,
     room::Room,
     ruma::events::room::{
-        create::SyncRoomCreateEvent, message::SyncRoomMessageEvent, name::SyncRoomNameEvent,
+        create::{RoomType, SyncRoomCreateEvent},
+        message::SyncRoomMessageEvent,
+        name::SyncRoomNameEvent,
     },
     uuid::Uuid,
 };
-use tracing::error;
+use tracing::{error, info};
 
 use crate::{
     data::{EventOrTxnId, MinRoomState, UuidWrap},
@@ -15,10 +17,19 @@ use crate::{
 };
 
 pub async fn on_room_create(
-    _event: SyncRoomCreateEvent,
+    event: SyncRoomCreateEvent,
     room: Room,
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
+    // Ignore rooms with a type (i.e. not regular chat rooms)
+    if let Some(t) = event.content.room_type {
+        if t != RoomType::Space {
+            info!("Ignoring room of unknown type `{}`", t);
+        }
+
+        return;
+    }
+
     if let Err(e) =
         ui_handle.submit_command(ADD_OR_UPDATE_ROOM, MinRoomState::new(room).await, Target::Auto)
     {
