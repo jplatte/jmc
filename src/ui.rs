@@ -5,7 +5,7 @@ use druid::{
     widget::{
         Align, Button, Flex, Label, List, Maybe, Padding, Scroll, Split, TextBox, ViewSwitcher,
     },
-    Command, Target, Widget, WidgetExt as _,
+    Color, Command, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
@@ -127,6 +127,11 @@ fn make_timeline_item() -> impl Widget<EventState> {
     Label::new(|state: &EventState, _env: &_| match &state.event_type {
         EventTypeState::RoomMessage { display_string } => display_string.clone(),
     })
+    .on_added(|label, _ctx, state, _env| {
+        if let EventOrTxnId::TxnId(_) = state.id {
+            label.set_text_color(Color::grey(0.5));
+        }
+    })
 }
 
 fn message_input_area() -> impl Widget<ActiveRoomState> {
@@ -149,8 +154,6 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                 let display_string = msg.body().into();
 
                 let txn_id = Uuid::new_v4();
-                // FIXME: Handle error
-                let _ = room.send(msg, Some(txn_id)).await;
 
                 let event_state = EventState {
                     id: EventOrTxnId::TxnId(UuidWrap(txn_id)),
@@ -161,6 +164,9 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                 if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
                     error!("{}", e);
                 }
+
+                // FIXME: Handle error
+                let _ = room.send(msg, Some(txn_id)).await;
             });
         }))
 }
