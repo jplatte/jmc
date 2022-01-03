@@ -33,3 +33,24 @@ features = [
 [patch."https://github.com/linebender/druid".druid]
 git = "https://github.com/jplatte/druid"
 branch = "jmc"
+
+# Optimize perf-relevant and crypto packages even in debug builds
+[profile.dev.package]
+bytes = { opt-level = 2 }
+curve25519-dalek = { opt-level = 2 }
+ed25519-dalek = { opt-level = 2 }
+h2 = { opt-level = 2 }
+http = { opt-level = 2 }
+hyper = { opt-level = 2 }
+im = { opt-level = 2 }
+image = { opt-level = 2 }
+jpeg-decoder = { opt-level = 2 }
+futures-channel = { opt-level = 2 }
+futures-core = { opt-level = 2 }
+futures-util = { opt-level = 2 }
+parking_lot = { opt-level = 2 }
+png = { opt-level = 2 }
+rustls = { opt-level = 2 }
+serde_json = { opt-level = 2 }
+sled = { opt-level = 2 }
+tokio = { opt-level = 2 }
