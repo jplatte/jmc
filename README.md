@@ -5,6 +5,9 @@ A simple Matrix client based on
 
 ## Prerequisites
 
+(The commands shown are tested on Ubuntu, and should work on other
+Debian-derived systems.)
+
 * Install [Rust](https://www.rust-lang.org/tools/install)
     ```sh
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
