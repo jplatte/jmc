@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use druid::Target;
 use matrix_sdk::{
     event_handler::Ctx,
@@ -69,9 +71,8 @@ pub async fn on_room_message(
         }
     }
 
-    if let Err(e) =
-        ui_handle.submit_command(ADD_EVENT, (room.room_id().into(), event.into()), Target::Auto)
-    {
+    let event = (room.room_id().into(), event.sender.deref().into(), event.into());
+    if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
         error!("{}", e);
     }
 }

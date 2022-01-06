@@ -1,12 +1,14 @@
 pub mod actions;
 
 use druid::{
+    im::vector,
     lens,
+    text::{Attribute, RichText},
     widget::{
-        Align, Button, Controller, Flex, Image, Label, List, Maybe, Padding, Scroll, Split,
-        TextBox, ViewSwitcher,
+        Align, Button, Controller, Flex, Image, Label, List, Maybe, Padding, RawLabel, Scroll,
+        Split, TextBox, ViewSwitcher,
     },
-    Color, Command, Size, Target, Widget, WidgetExt as _,
+    Color, Command, FontWeight, Size, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
@@ -14,8 +16,8 @@ use tracing::error;
 
 use self::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, FINISH_LOGIN, REMOVE_EVENT, SET_ACTIVE_ROOM};
 use crate::data::{
-    ActiveRoomState, AppState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
-    LoginState, MinRoomState, UserState, UuidWrap, View, LOGIN_TX,
+    ActiveRoomState, AppState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
+    JoinedRoomState, LoginState, MinRoomState, UserState, UuidWrap, View, LOGIN_TX,
 };
 
 pub(crate) fn build_ui() -> impl Widget<AppState> {
@@ -133,7 +135,7 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
         .with_flex_child(
             Scroll::new(
-                List::new(make_timeline_item)
+                List::new(make_timeline_event_group)
                     .with_spacing(2.0)
                     .expand_width()
                     .lens(ActiveRoomState::timeline),
@@ -143,13 +145,24 @@ fn room_view() -> impl Widget<ActiveRoomState> {
             1.0,
         )
         .with_child(message_input_area())
-        .on_command(ADD_EVENT, |_ctx, (room_id, event), state| {
+        .on_command(ADD_EVENT, |_ctx, (room_id, sender, event), state| {
             if *state.id == *room_id {
-                state.timeline.push_back(event.to_owned());
+                let event_group_state = EventGroupState {
+                    sender: sender.clone(),
+                    // FIXME: Get display name from ADD_EVENT
+                    sender_display_name: RichText::new(sender.as_str().into())
+                        .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
+                    // FIXME: Put in last group if same sender
+                    events: vector![event.clone()],
+                };
+
+                state.timeline.push_back(event_group_state);
             }
         })
         .on_command(REMOVE_EVENT, |_ctx, id, state| {
-            if let Some(idx) = state.timeline.iter().position(|ev| ev.id == *id) {
+            if let Some(idx) =
+                state.timeline.iter().position(|g| g.events.iter().any(|ev| ev.id == *id))
+            {
                 state.timeline.remove(idx);
             } else {
                 error!("Can't remove event {:?}", id);
@@ -157,7 +170,13 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         })
 }
 
-fn make_timeline_item() -> impl Widget<EventState> {
+fn make_timeline_event_group() -> impl Widget<EventGroupState> {
+    Flex::row()
+        .with_child(RawLabel::new().lens(EventGroupState::sender_display_name))
+        .with_child(List::new(make_timeline_event).lens(EventGroupState::events))
+}
+
+fn make_timeline_event() -> impl Widget<EventState> {
     Label::new(|state: &EventState, _env: &_| match &state.event_type {
         EventTypeState::RoomMessage { display_string } => display_string.clone(),
     })
@@ -200,7 +219,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                         id: EventOrTxnId::TxnId(UuidWrap(txn_id)),
                         event_type: EventTypeState::RoomMessage { display_string },
                     };
-                    let event = (room.room_id().into(), event_state);
+                    let event = (room.room_id().into(), room.own_user_id().into(), event_state);
 
                     if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
                         error!("{}", e);

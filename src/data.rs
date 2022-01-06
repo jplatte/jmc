@@ -2,6 +2,7 @@ use std::{fmt, sync::Arc};
 
 use druid::{
     im::{OrdMap, Vector},
+    text::RichText,
     ImageBuf, Key,
 };
 use matrix_sdk::{
@@ -12,7 +13,7 @@ use matrix_sdk::{
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 
-use crate::util::{EventIdArc, RoomIdArc};
+use crate::util::{EventIdArc, RoomIdArc, UserIdArc};
 
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
@@ -123,8 +124,7 @@ async fn decode_image(bytes: Vec<u8>) -> anyhow::Result<ImageBuf> {
 pub struct ActiveRoomState {
     pub id: RoomIdArc,
     pub display_name: Arc<str>,
-    // FIXME: Find an alternative that works similar to IndexMap
-    pub timeline: Vector<EventState>,
+    pub timeline: Vector<EventGroupState>,
     pub kind: Option<JoinedRoomState>,
 }
 
@@ -145,6 +145,13 @@ impl From<&MinRoomState> for ActiveRoomState {
             kind,
         }
     }
+}
+
+#[derive(Clone, druid::Data, druid::Lens)]
+pub struct EventGroupState {
+    pub sender: UserIdArc,
+    pub sender_display_name: RichText,
+    pub events: Vector<EventState>,
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
