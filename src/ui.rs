@@ -147,23 +147,42 @@ fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, sender, event), state| {
             if *state.id == *room_id {
-                let event_group_state = EventGroupState {
-                    sender: sender.clone(),
-                    // FIXME: Get display name from ADD_EVENT
-                    sender_display_name: RichText::new(sender.as_str().into())
-                        .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
-                    // FIXME: Put in last group if same sender
-                    events: vector![event.clone()],
-                };
+                // FIXME: Use if-let-chain once possible
+                match state.timeline.back_mut() {
+                    Some(group) if *sender == group.sender => {
+                        group.events.push_back(event.clone());
+                    }
+                    _ => {
+                        let event_group_state = EventGroupState {
+                            sender: sender.clone(),
+                            // FIXME: Get display name from ADD_EVENT
+                            sender_display_name: RichText::new(sender.as_str().into())
+                                .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
+                            // FIXME: Put in last group if same sender
+                            events: vector![event.clone()],
+                        };
 
-                state.timeline.push_back(event_group_state);
+                        state.timeline.push_back(event_group_state);
+                    }
+                }
             }
         })
         .on_command(REMOVE_EVENT, |_ctx, id, state| {
-            if let Some(idx) =
-                state.timeline.iter().position(|g| g.events.iter().any(|ev| ev.id == *id))
-            {
-                state.timeline.remove(idx);
+            let evt_group_evt_idx = state.timeline.iter().enumerate().find_map(|(idx1, group)| {
+                let idx2 = group.events.iter().position(|ev| ev.id == *id)?;
+                Some((idx1, idx2))
+            });
+
+            if let Some((group_idx, evt_idx)) = evt_group_evt_idx {
+                let events = &mut state.timeline[group_idx].events;
+
+                if events.len() == 1 {
+                    // If this is the only event, remove the whole group.
+                    state.timeline.remove(group_idx);
+                } else {
+                    // Otherwise, keep the group (only remove the event from it).
+                    events.remove(evt_idx);
+                }
             } else {
                 error!("Can't remove event {:?}", id);
             }
