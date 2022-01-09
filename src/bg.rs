@@ -111,6 +111,12 @@ async fn logged_in_main(
 
             if !joined_rooms.is_empty() {
                 for r in joined_rooms {
+                    if r.tombstone().is_some() {
+                        // Skip rooms that have been superseded (for now)
+                        // FIXME: Find a better solution.
+                        continue;
+                    }
+
                     let room_state = MinRoomState::new(r).await;
                     if let Err(e) =
                         ui_handle.submit_command(ADD_OR_UPDATE_ROOM, room_state, Target::Auto)
