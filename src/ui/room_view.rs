@@ -84,7 +84,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                 1.0,
             )
             .with_default_spacer()
-            .with_child(Button::<JoinedRoomState>::new("➤").on_click(|ctx, state, _env| {
+            .with_child(Button::new("➤").on_click(|ctx, state: &mut JoinedRoomState, _env| {
                 let room = state.room.clone();
                 let message_input = state.message_input.clone();
                 let ui_handle = ctx.get_external_handle();

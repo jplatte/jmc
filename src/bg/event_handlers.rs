@@ -9,7 +9,6 @@ use matrix_sdk::{
         message::SyncRoomMessageEvent,
         name::SyncRoomNameEvent,
     },
-    uuid::Uuid,
 };
 use tracing::{error, info};
 
@@ -57,7 +56,7 @@ pub async fn on_room_message(
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
     if let Some(txn_id) = &event.unsigned.transaction_id {
-        match txn_id.parse::<Uuid>() {
+        match txn_id.parse() {
             Ok(txn_id) => {
                 if let Err(e) = ui_handle.submit_command(
                     REMOVE_EVENT,

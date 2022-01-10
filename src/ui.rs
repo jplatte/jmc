@@ -39,7 +39,7 @@ fn login_screen() -> impl Widget<LoginState> {
             .with_child(
                 TextBox::protected().with_placeholder("Password").lens(LoginState::password),
             )
-            .with_child(Button::<LoginState>::new("Log in").on_click(|_, state, env| {
+            .with_child(Button::new("Log in").on_click(|_, state: &mut LoginState, env| {
                 let send_res = env.get(LOGIN_TX).try_send(state.to_owned());
 
                 if let Err(e) = send_res {

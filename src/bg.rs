@@ -153,7 +153,7 @@ async fn logged_in_main(
 }
 
 async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginResponse)> {
-    let user_id = match Box::<UserId>::try_from(login_data.user_id.as_str()) {
+    let user_id = match UserId::parse(login_data.user_id.as_str()) {
         Ok(id) => id,
         Err(e) => {
             // FIXME: Show error in UI
