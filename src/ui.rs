@@ -24,9 +24,8 @@ pub(crate) fn build_ui() -> impl Widget<AppState> {
         .with_variant(AppStateLogin, login_screen)
         .with_variant(AppStateLoggingIn, loading)
         .with_variant(AppStateLoggedIn, main_ui)
-        .on_command(FINISH_LOGIN, |ctx, _user_data, state| {
+        .on_command(FINISH_LOGIN, |_ctx, _user_data, state| {
             *state = AppState::LoggedIn(UserState::default());
-            ctx.set_handled();
         })
 }
 
