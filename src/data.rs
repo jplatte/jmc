@@ -19,59 +19,11 @@ use crate::util::{EventIdArc, RoomIdArc, UserIdArc};
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
-#[derive(Clone, druid::Data)]
+#[derive(Clone, druid::Data, Prism)]
 pub enum AppState {
     Login(LoginState),
     LoggingIn,
     LoggedIn(UserState),
-}
-
-#[derive(Clone)]
-pub struct AppStateLogin;
-
-#[derive(Clone)]
-pub struct AppStateLoggingIn;
-
-#[derive(Clone)]
-pub struct AppStateLoggedIn;
-
-impl Prism<AppState, LoginState> for AppStateLogin {
-    fn get(&self, data: &AppState) -> Option<LoginState> {
-        match data {
-            AppState::Login(value) => Some(value.clone()),
-            _ => None,
-        }
-    }
-
-    fn put(&self, data: &mut AppState, inner: LoginState) {
-        *data = AppState::Login(inner);
-    }
-}
-
-impl Prism<AppState, ()> for AppStateLoggingIn {
-    fn get(&self, data: &AppState) -> Option<()> {
-        match data {
-            AppState::LoggingIn => Some(()),
-            _ => None,
-        }
-    }
-
-    fn put(&self, data: &mut AppState, _inner: ()) {
-        *data = AppState::LoggingIn;
-    }
-}
-
-impl Prism<AppState, UserState> for AppStateLoggedIn {
-    fn get(&self, data: &AppState) -> Option<UserState> {
-        match data {
-            AppState::LoggedIn(value) => Some(value.clone()),
-            _ => None,
-        }
-    }
-
-    fn put(&self, data: &mut AppState, inner: UserState) {
-        *data = AppState::LoggedIn(inner);
-    }
 }
 
 #[derive(Clone, Default, druid::Data, druid::Lens)]
