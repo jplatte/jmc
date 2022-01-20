@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use std::{sync::Arc, time::Duration};
 
 use druid::{AppLauncher, PlatformError, WindowDesc};

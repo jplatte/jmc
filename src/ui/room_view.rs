@@ -24,25 +24,23 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
         .with_flex_child(timeline(), 1.0)
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, sender, event), state| {
-            if *state.id == *room_id {
-                // FIXME: Use if-let-chain once possible
-                match state.timeline.back_mut() {
-                    Some(group) if *sender == group.sender => {
-                        group.events.push_back(event.clone());
-                    }
-                    _ => {
-                        let event_group_state = EventGroupState {
-                            sender: sender.clone(),
-                            // FIXME: Get display name from ADD_EVENT
-                            sender_display_name: RichText::new(sender.as_str().into())
-                                .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
-                            // FIXME: Put in last group if same sender
-                            events: vector![event.clone()],
-                        };
+            if *state.id != *room_id {
+                return;
+            }
 
-                        state.timeline.push_back(event_group_state);
-                    }
-                }
+            if let Some(group) = state.timeline.back_mut() && *sender == group.sender {
+                group.events.push_back(event.clone());
+            } else {
+                let event_group_state = EventGroupState {
+                    sender: sender.clone(),
+                    // FIXME: Get display name from ADD_EVENT
+                    sender_display_name: RichText::new(sender.as_str().into())
+                        .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
+                    // FIXME: Put in last group if same sender
+                    events: vector![event.clone()],
+                };
+
+                state.timeline.push_back(event_group_state);
             }
         })
         .on_command(REMOVE_EVENT, |_ctx, id, state| {
