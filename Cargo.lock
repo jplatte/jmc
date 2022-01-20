@@ -760,7 +760,7 @@ dependencies = [
 [[package]]
 name = "druid-widget-nursery"
 version = "0.1.0"
-source = "git+https://github.com/jplatte/druid-widget-nursery?branch=prism-derive#f00c5da6c5d0e9b838ecc7251f5aa32dfbdf4a1f"
+source = "git+https://github.com/linebender/druid-widget-nursery#6d5dfc548603a45f307cfc1fde9b9d5f49863b49"
 dependencies = [
  "druid",
  "druid-widget-nursery-derive",
@@ -771,7 +771,7 @@ dependencies = [
 [[package]]
 name = "druid-widget-nursery-derive"
 version = "0.1.0"
-source = "git+https://github.com/jplatte/druid-widget-nursery?branch=prism-derive#f00c5da6c5d0e9b838ecc7251f5aa32dfbdf4a1f"
+source = "git+https://github.com/linebender/druid-widget-nursery#6d5dfc548603a45f307cfc1fde9b9d5f49863b49"
 dependencies = [
  "proc-macro2",
  "quote",
