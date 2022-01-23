@@ -14,11 +14,15 @@ use matrix_sdk::{
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 
-use crate::util::{EventIdArc, RoomIdArc, UserIdArc};
+use crate::{
+    ui::actions::NewActiveRoomState,
+    util::{EventIdArc, RoomIdArc, UserIdArc},
+};
 
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
 pub const LOGIN_TX: Key<Arc<Sender<LoginState>>> = Key::new("jmc.login_tx");
 
+#[allow(clippy::large_enum_variant)] // for now
 #[derive(Clone, druid::Data, Prism)]
 pub enum AppState {
     Login(LoginState),
@@ -63,74 +67,23 @@ impl MinRoomState {
     }
 }
 
-/* fetching images (displaying is broken so this is not currently used)
-
-use druid::image::io::Reader as ImageReader;
-use matrix_sdk::{
-    media::{MediaFormat, MediaThumbnailSize},
-    ruma::{api::client::r0::media::get_content_thumbnail::Method as ResizeMethod, uint},
-};
-use std::io::Cursor;
-use tokio::task;
-
-let icon_format = MediaFormat::Thumbnail(MediaThumbnailSize {
-    method: ResizeMethod::Scale,
-    width: uint!(32),
-    height: uint!(32),
-});
-let icon_bytes = match room.avatar(icon_format).await {
-    Ok(b) => b,
-    Err(e) => {
-        error!("Failed to load room icon: {}", e);
-        None
-    }
-};
-let icon = match icon_bytes {
-    Some(bytes) => match decode_image(bytes).await {
-        Ok(image) => image,
-        Err(e) => {
-            error!("Failed to decode room icon: {}", e);
-            ImageBuf::empty()
-        }
-    },
-    None => ImageBuf::empty(),
-};
-
-async fn decode_image(bytes: Vec<u8>) -> anyhow::Result<ImageBuf> {
-    task::spawn_blocking(move || {
-        let cursor = Cursor::new(bytes);
-        let reader = ImageReader::new(cursor).with_guessed_format()?;
-        let image = reader.decode()?;
-
-        Ok(ImageBuf::from_dynamic_image(image))
-    })
-    .await?
-}
-*/
-
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct ActiveRoomState {
     pub id: RoomIdArc,
+    pub icon: ImageBuf,
     pub display_name: Arc<str>,
     pub timeline: Vector<EventGroupState>,
     pub kind: Option<JoinedRoomState>,
 }
 
-impl From<&MinRoomState> for ActiveRoomState {
-    fn from(st: &MinRoomState) -> Self {
-        let kind = match &st.room {
-            Room::Joined(joined) => {
-                Some(JoinedRoomState { message_input: Default::default(), room: joined.to_owned() })
-            }
-            Room::Left(_) => None,
-            Room::Invited(_) => None,
-        };
-
+impl From<&NewActiveRoomState> for ActiveRoomState {
+    fn from(new: &NewActiveRoomState) -> Self {
         Self {
-            id: st.id.clone(),
-            display_name: st.display_name.clone(),
+            id: new.id.clone(),
+            icon: new.icon.clone(),
+            display_name: new.display_name.clone(),
             timeline: Vector::new(),
-            kind,
+            kind: new.kind.clone(),
         }
     }
 }

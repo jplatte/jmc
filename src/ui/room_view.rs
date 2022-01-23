@@ -1,8 +1,8 @@
 use druid::{
     im::vector,
     text::{Attribute, RichText},
-    widget::{Button, Flex, Label, Maybe, Padding, TextBox},
-    FontWeight, Target, Widget, WidgetExt as _,
+    widget::{Button, Controller, Flex, Image, Label, Maybe, Padding, TextBox},
+    FontWeight, ImageBuf, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
 use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
@@ -20,7 +20,7 @@ use self::timeline::timeline;
 
 pub fn room_view() -> impl Widget<ActiveRoomState> {
     Flex::column()
-        .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
+        .with_child(room_header())
         .with_flex_child(timeline(), 1.0)
         .with_child(message_input_area())
         .on_command(ADD_EVENT, |_ctx, (room_id, sender, event), state| {
@@ -63,6 +63,14 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
                 error!("Can't remove event {:?}", id);
             }
         })
+}
+
+fn room_header() -> impl Widget<ActiveRoomState> {
+    Flex::row()
+        .with_child(
+            Image::new(ImageBuf::empty()).controller(RoomIconController).fix_size(24.0, 24.0),
+        )
+        .with_child(Label::new(|state: &ActiveRoomState, _env: &_| state.display_name.clone()))
 }
 
 fn message_input_area() -> impl Widget<ActiveRoomState> {
@@ -108,4 +116,38 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                 });
             })),
     )
+}
+
+struct RoomIconController;
+
+impl Controller<ActiveRoomState, Image> for RoomIconController {
+    fn lifecycle(
+        &mut self,
+        child: &mut Image,
+        ctx: &mut druid::LifeCycleCtx,
+        event: &druid::LifeCycle,
+        data: &ActiveRoomState,
+        env: &druid::Env,
+    ) {
+        if let druid::LifeCycle::WidgetAdded = event {
+            child.set_image_data(data.icon.clone());
+        }
+
+        child.lifecycle(ctx, event, data, env);
+    }
+
+    fn update(
+        &mut self,
+        child: &mut Image,
+        ctx: &mut druid::UpdateCtx,
+        old_data: &ActiveRoomState,
+        data: &ActiveRoomState,
+        env: &druid::Env,
+    ) {
+        //if data.icon.size() != Size::ZERO {
+        child.set_image_data(data.icon.clone());
+        //}
+
+        child.update(ctx, old_data, data, env);
+    }
 }

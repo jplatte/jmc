@@ -1,12 +1,13 @@
 use druid::{
     widget::{Controller, Image, Label, List, Scroll},
-    Command, Size, Target, Widget, WidgetExt as _,
+    Size, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
+use tracing::error;
 
 use crate::data::{MinRoomState, UserState};
 
-use super::actions::{ADD_OR_UPDATE_ROOM, SET_ACTIVE_ROOM};
+use super::actions::{NewActiveRoomState, ADD_OR_UPDATE_ROOM, SET_ACTIVE_ROOM};
 
 pub fn rooms_sidebar() -> impl Widget<UserState> {
     Scroll::new(List::new(make_room_item).with_spacing(6.0).lens(UserState::rooms))
@@ -24,7 +25,14 @@ fn make_room_item() -> impl Widget<MinRoomState> {
         //    image.set_image_data(state.icon.clone());
         //})
         .on_click(|ctx, state, _env| {
-            ctx.submit_command(Command::new(SET_ACTIVE_ROOM, state.clone(), Target::Auto));
+            let ui_handle = ctx.get_external_handle();
+            let state = state.clone();
+            tokio::spawn(async move {
+                let state = NewActiveRoomState::new(state).await;
+                if let Err(e) = ui_handle.submit_command(SET_ACTIVE_ROOM, state, Target::Auto) {
+                    error!("{}", e);
+                }
+            });
         })
     // FIXME: Tooltip widget is rather broken (not positioned correctly, can be focused)
     //.tooltip(|state: &MinRoomState, _env: &_| state.display_name.clone())
