@@ -144,10 +144,7 @@ impl Controller<ActiveRoomState, Image> for RoomIconController {
         data: &ActiveRoomState,
         env: &druid::Env,
     ) {
-        //if data.icon.size() != Size::ZERO {
         child.set_image_data(data.icon.clone());
-        //}
-
         child.update(ctx, old_data, data, env);
     }
 }
