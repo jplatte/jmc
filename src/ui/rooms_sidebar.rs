@@ -30,7 +30,7 @@ fn make_room_item() -> impl Widget<MinRoomState> {
             tokio::spawn(async move {
                 let state = NewActiveRoomState::new(state).await;
                 if let Err(e) = ui_handle.submit_command(SET_ACTIVE_ROOM, state, Target::Auto) {
-                    error!("{}", e);
+                    error!("{e}");
                 }
             });
         })

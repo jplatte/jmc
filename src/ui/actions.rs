@@ -41,7 +41,7 @@ impl NewActiveRoomState {
         let icon_bytes = match st.room.avatar(icon_format).await {
             Ok(b) => b,
             Err(e) => {
-                error!("Failed to load room icon: {}", e);
+                error!("Failed to load room icon: {e}");
                 None
             }
         };
@@ -49,7 +49,7 @@ impl NewActiveRoomState {
             Some(bytes) => match decode_image(bytes).await {
                 Ok(image) => image,
                 Err(e) => {
-                    error!("Failed to decode room icon: {}", e);
+                    error!("Failed to decode room icon: {e}");
                     ImageBuf::empty()
                 }
             },

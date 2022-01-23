@@ -36,7 +36,7 @@ pub async fn main(
     ui_handle: druid::ExtEventSink,
 ) {
     if let Err(e) = fs::create_dir_all(&*CONFIG_DIR_PATH).await {
-        error!("Failed to create store directory: {}", e);
+        error!("Failed to create store directory: {e}");
         return;
     }
 
@@ -44,7 +44,7 @@ pub async fn main(
         match restore_login(session.clone()).await {
             Ok(mtx_client) => State::LoggedIn { mtx_client },
             Err(e) => {
-                error!("{}", e);
+                error!("{e}");
                 // FIXME: Display an error message on the login screen
                 State::LoggedOut
             }
@@ -82,13 +82,13 @@ async fn logged_out_main(login_rx: &mut Receiver<LoginState>) -> ControlFlow<(),
             let config = Config { session: Some(session) };
 
             if let Err(e) = task::spawn_blocking(move || config::save(&config)).await {
-                error!("Failed to save config: {:?}", e);
+                error!("Failed to save config: {e:?}");
             }
 
             ControlFlow::Continue(State::LoggedIn { mtx_client })
         }
         Err(e) => {
-            error!("{:?}", e);
+            error!("{e:?}");
             ControlFlow::Continue(State::LoggedOut)
         }
     }
@@ -99,7 +99,7 @@ async fn logged_in_main(
     ui_handle: druid::ExtEventSink,
 ) -> ControlFlow<(), State> {
     if let Err(e) = ui_handle.submit_command(FINISH_LOGIN, (), Target::Auto) {
-        error!("{}", e);
+        error!("{e}");
     }
 
     task::spawn({
@@ -121,7 +121,7 @@ async fn logged_in_main(
                     if let Err(e) =
                         ui_handle.submit_command(ADD_OR_UPDATE_ROOM, room_state, Target::Auto)
                     {
-                        error!("{}", e);
+                        error!("{e}");
                     }
                 }
             }
@@ -157,7 +157,7 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
         Ok(id) => id,
         Err(e) => {
             // FIXME: Show error in UI
-            bail!("Can't log in due to invalid User ID: {}", e);
+            bail!("Can't log in due to invalid User ID: {e}");
         }
     };
 

@@ -58,7 +58,7 @@ impl MinRoomState {
         let display_name = match room.display_name().await {
             Ok(name) => name.into(),
             Err(e) => {
-                error!("Failed to compute room display name: {}", e);
+                error!("Failed to compute room display name: {e}");
                 "<error>".into()
             }
         };

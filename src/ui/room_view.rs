@@ -60,7 +60,7 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
                     events.remove(evt_idx);
                 }
             } else {
-                error!("Can't remove event {:?}", id);
+                error!("Can't remove event {id:?}");
             }
         })
 }
@@ -108,7 +108,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     let event = (room.room_id().into(), room.own_user_id().into(), event_state);
 
                     if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
-                        error!("{}", e);
+                        error!("{e}");
                     }
 
                     // FIXME: Handle error

@@ -25,7 +25,7 @@ pub async fn on_room_create(
     // Ignore rooms with a type (i.e. not regular chat rooms)
     if let Some(t) = event.content.room_type {
         if t != RoomType::Space {
-            info!("Ignoring room of unknown type `{}`", t);
+            info!("Ignoring room of unknown type `{t}`");
         }
 
         return;
@@ -34,7 +34,7 @@ pub async fn on_room_create(
     if let Err(e) =
         ui_handle.submit_command(ADD_OR_UPDATE_ROOM, MinRoomState::new(room).await, Target::Auto)
     {
-        error!("{}", e);
+        error!("{e}");
     }
 }
 
@@ -46,7 +46,7 @@ pub async fn on_room_name(
     if let Err(e) =
         ui_handle.submit_command(ADD_OR_UPDATE_ROOM, MinRoomState::new(room).await, Target::Auto)
     {
-        error!("{}", e);
+        error!("{e}");
     }
 }
 
@@ -63,15 +63,15 @@ pub async fn on_room_message(
                     EventOrTxnId::TxnId(UuidWrap(txn_id)),
                     Target::Auto,
                 ) {
-                    error!("{}", e);
+                    error!("{e}");
                 }
             }
-            Err(e) => error!("{}", e),
+            Err(e) => error!("{e}"),
         }
     }
 
     let event = (room.room_id().into(), event.sender.deref().into(), event.into());
     if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
-        error!("{}", e);
+        error!("{e}");
     }
 }

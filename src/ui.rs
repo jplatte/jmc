@@ -42,7 +42,7 @@ fn login_screen() -> impl Widget<LoginState> {
                 let send_res = env.get(LOGIN_TX).try_send(state.to_owned());
 
                 if let Err(e) = send_res {
-                    error!("Sending login data failed: {}", e);
+                    error!("Sending login data failed: {e}");
                 }
             })),
     )
