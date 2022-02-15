@@ -5,13 +5,15 @@ use druid::{
     FontWeight, ImageBuf, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
-use matrix_sdk::{ruma::events::room::message::RoomMessageEventContent, uuid::Uuid};
+use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
 use tracing::error;
 
 use super::actions::{ADD_EVENT, REMOVE_EVENT};
-use crate::data::{
-    ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
-    UuidWrap,
+use crate::{
+    data::{
+        ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
+    },
+    util::TransactionIdArc,
 };
 
 mod timeline;
@@ -99,10 +101,10 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     let msg = RoomMessageEventContent::text_markdown(message_input.as_str());
                     let display_string = msg.body().into();
 
-                    let txn_id = Uuid::new_v4();
+                    let txn_id = TransactionIdArc::new();
 
                     let event_state = EventState {
-                        id: EventOrTxnId::TxnId(UuidWrap(txn_id)),
+                        id: EventOrTxnId::TxnId(txn_id.clone()),
                         event_type: EventTypeState::RoomMessage { display_string },
                     };
                     let event = (room.room_id().into(), room.own_user_id().into(), event_state);
@@ -112,7 +114,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     }
 
                     // FIXME: Handle error
-                    let _ = room.send(msg, Some(txn_id)).await;
+                    let _ = room.send(msg, Some(&txn_id)).await;
                 });
             })),
     )

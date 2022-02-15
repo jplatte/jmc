@@ -13,7 +13,7 @@ use matrix_sdk::{
 use tracing::{error, info};
 
 use crate::{
-    data::{EventOrTxnId, MinRoomState, UuidWrap},
+    data::{EventOrTxnId, MinRoomState},
     ui::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, REMOVE_EVENT},
 };
 
@@ -56,17 +56,10 @@ pub async fn on_room_message(
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
     if let Some(txn_id) = &event.unsigned.transaction_id {
-        match txn_id.parse() {
-            Ok(txn_id) => {
-                if let Err(e) = ui_handle.submit_command(
-                    REMOVE_EVENT,
-                    EventOrTxnId::TxnId(UuidWrap(txn_id)),
-                    Target::Auto,
-                ) {
-                    error!("{e}");
-                }
-            }
-            Err(e) => error!("{e}"),
+        if let Err(e) =
+            ui_handle.submit_command(REMOVE_EVENT, EventOrTxnId::TxnId(txn_id.into()), Target::Auto)
+        {
+            error!("{e}");
         }
     }
 

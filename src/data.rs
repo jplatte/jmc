@@ -1,4 +1,4 @@
-use std::{fmt, sync::Arc};
+use std::sync::Arc;
 
 use druid::{
     im::{OrdMap, Vector},
@@ -9,14 +9,13 @@ use druid_widget_nursery::prism::Prism;
 use matrix_sdk::{
     room::{self, Room},
     ruma::events::room::message::SyncRoomMessageEvent,
-    uuid::Uuid,
 };
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 
 use crate::{
     ui::actions::NewActiveRoomState,
-    util::{EventIdArc, RoomIdArc, UserIdArc},
+    util::{EventIdArc, RoomIdArc, TransactionIdArc, UserIdArc},
 };
 
 // FIXME: Having to use `Arc` to fulfill the `ValueType` bound here feels wrong.
@@ -135,14 +134,5 @@ pub struct JoinedRoomState {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub enum EventOrTxnId {
     EventId(EventIdArc),
-    TxnId(UuidWrap),
-}
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
-pub struct UuidWrap(#[data(eq)] pub Uuid);
-
-impl fmt::Debug for UuidWrap {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
-    }
+    TxnId(TransactionIdArc),
 }

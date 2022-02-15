@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref, sync::Arc};
 
-use matrix_sdk::ruma::{EventId, RoomId, UserId};
+use matrix_sdk::ruma::{EventId, RoomId, TransactionId, UserId};
 use paste::paste;
 
 macro_rules! id_arc {
@@ -37,6 +37,12 @@ macro_rules! id_arc {
             }
         }
 
+        impl From<&Box<$inner>> for $name {
+            fn from(room_id: &Box<$inner>) -> Self {
+                Self(room_id.deref().into())
+            }
+        }
+
         impl From<Box<$inner>> for $name {
             fn from(room_id: Box<$inner>) -> Self {
                 Self(room_id.into())
@@ -59,4 +65,11 @@ macro_rules! id_arc {
 
 id_arc!(EventId);
 id_arc!(RoomId);
+id_arc!(TransactionId);
 id_arc!(UserId);
+
+impl TransactionIdArc {
+    pub fn new() -> Self {
+        TransactionId::new().into()
+    }
+}
