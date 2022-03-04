@@ -4,15 +4,15 @@ use anyhow::bail;
 use druid::Target;
 use matrix_sdk::{
     config::{ClientConfig as MatrixClientConfig, SyncSettings},
-    ruma::{
-        api::client::r0::{
-            filter::{FilterDefinition, LazyLoadOptions, RoomEventFilter, RoomFilter},
-            session::login::Response as LoginResponse,
-            sync::sync_events::Filter,
-        },
-        assign, UserId,
-    },
     Client as MatrixClient, Session,
+};
+use ruma::{
+    api::client::{
+        filter::{FilterDefinition, LazyLoadOptions, RoomEventFilter, RoomFilter},
+        session::login::v3::Response as LoginResponse,
+        sync::sync_events::v3::Filter,
+    },
+    assign, UserId,
 };
 use tokio::{fs, sync::mpsc::Receiver, task};
 use tracing::error;

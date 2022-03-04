@@ -5,7 +5,7 @@ use druid::{
     FontWeight, ImageBuf, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::WidgetExt as _;
-use matrix_sdk::ruma::events::room::message::RoomMessageEventContent;
+use ruma::events::room::message::RoomMessageEventContent;
 use tracing::error;
 
 use super::actions::{ADD_EVENT, REMOVE_EVENT};

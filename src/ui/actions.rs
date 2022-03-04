@@ -4,8 +4,8 @@ use druid::{image::io::Reader as ImageReader, ImageBuf, Selector};
 use matrix_sdk::{
     media::{MediaFormat, MediaThumbnailSize},
     room::Room,
-    ruma::{api::client::r0::media::get_content_thumbnail::Method as ResizeMethod, uint, RoomId},
 };
+use ruma::{api::client::media::get_content_thumbnail::v3::Method as ResizeMethod, uint, RoomId};
 use tokio::task;
 use tracing::error;
 

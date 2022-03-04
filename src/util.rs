@@ -1,7 +1,7 @@
 use std::{fmt, ops::Deref, sync::Arc};
 
-use matrix_sdk::ruma::{EventId, RoomId, TransactionId, UserId};
 use paste::paste;
+use ruma::{EventId, RoomId, TransactionId, UserId};
 
 macro_rules! id_arc {
     ($inner:ident) => {

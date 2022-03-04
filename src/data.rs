@@ -6,10 +6,8 @@ use druid::{
     ImageBuf, Key,
 };
 use druid_widget_nursery::prism::Prism;
-use matrix_sdk::{
-    room::{self, Room},
-    ruma::events::room::message::SyncRoomMessageEvent,
-};
+use matrix_sdk::room::{self, Room};
+use ruma::events::room::message::SyncRoomMessageEvent;
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 

@@ -1,14 +1,11 @@
 use std::ops::Deref;
 
 use druid::Target;
-use matrix_sdk::{
-    event_handler::Ctx,
-    room::Room,
-    ruma::events::room::{
-        create::{RoomType, SyncRoomCreateEvent},
-        message::SyncRoomMessageEvent,
-        name::SyncRoomNameEvent,
-    },
+use matrix_sdk::{event_handler::Ctx, room::Room};
+use ruma::events::room::{
+    create::{RoomType, SyncRoomCreateEvent},
+    message::SyncRoomMessageEvent,
+    name::SyncRoomNameEvent,
 };
 use tracing::{error, info};
 
