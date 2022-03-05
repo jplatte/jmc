@@ -17,6 +17,17 @@ pub struct ActiveRoomState {
     pub display_name: Arc<str>,
     pub timeline: Vector<EventGroupState>,
     pub kind: RoomKindState,
+    pub show_spinner: bool,
+}
+
+impl ActiveRoomState {
+    pub fn room(&self) -> &room::Common {
+        match &self.kind {
+            RoomKindState::Joined(j) => &j.room,
+            RoomKindState::Left(l) => &l.room,
+            RoomKindState::Invited(i) => &i.room,
+        }
+    }
 }
 
 impl From<&NewActiveRoomState> for ActiveRoomState {
@@ -27,6 +38,7 @@ impl From<&NewActiveRoomState> for ActiveRoomState {
             display_name: new.display_name.clone(),
             timeline: Vector::new(),
             kind: new.kind.clone(),
+            show_spinner: false,
         }
     }
 }

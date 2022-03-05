@@ -1,14 +1,15 @@
 use druid::{
-    im::vector,
+    im::{vector, Vector},
     text::{Attribute, RichText},
     widget::{Button, Controller, Flex, Image, Label, Padding, TextBox},
     FontWeight, ImageBuf, Target, Widget, WidgetExt as _,
 };
 use druid_widget_nursery::{enum_switcher::Switcher, WidgetExt as _};
+use extension_trait::extension_trait;
 use ruma::events::room::message::RoomMessageEventContent;
 use tracing::error;
 
-use super::actions::{ADD_EVENT, REMOVE_EVENT};
+use super::actions::{APPEND_EVENT, PREPEND_EVENT, REMOVE_EVENT};
 use crate::{
     data::active_room::{
         ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
@@ -26,25 +27,11 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(room_header())
         .with_flex_child(timeline(), 1.0)
         .with_child(message_input_area())
-        .on_command(ADD_EVENT, |_ctx, (room_id, sender, event), state| {
-            if *state.id != *room_id {
-                return;
-            }
-
-            if let Some(group) = state.timeline.back_mut() && *sender == group.sender {
-                group.events.push_back(event.clone());
-            } else {
-                let event_group_state = EventGroupState {
-                    sender: sender.clone(),
-                    // FIXME: Get display name from ADD_EVENT
-                    sender_display_name: RichText::new(sender.as_str().into())
-                        .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
-                    // FIXME: Put in last group if same sender
-                    events: vector![event.clone()],
-                };
-
-                state.timeline.push_back(event_group_state);
-            }
+        .on_command(APPEND_EVENT, |_ctx, (room_id, sender, event), state| {
+            add_event(state, room_id, sender, event, Placement::Back)
+        })
+        .on_command(PREPEND_EVENT, |_ctx, (room_id, sender, event), state| {
+            add_event(state, room_id, sender, event, Placement::Front)
         })
         .on_command(REMOVE_EVENT, |_ctx, id, state| {
             let evt_group_evt_idx = state.timeline.iter().enumerate().find_map(|(idx1, group)| {
@@ -66,6 +53,48 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
                 error!("Can't remove event {id:?}");
             }
         })
+}
+
+enum Placement {
+    Front,
+    Back,
+}
+
+#[extension_trait]
+impl<T: Clone> VectorExt<T> for Vector<T> {
+    fn push(&mut self, value: T, placement: Placement) {
+        match placement {
+            Placement::Front => self.push_front(value),
+            Placement::Back => self.push_back(value),
+        }
+    }
+}
+
+fn add_event(
+    state: &mut ActiveRoomState,
+    room_id: &std::sync::Arc<ruma::RoomId>,
+    sender: &crate::util::UserIdArc,
+    event: &EventState,
+    placement: Placement,
+) {
+    if *state.id != *room_id {
+        return;
+    }
+
+    if let Some(group) = state.timeline.back_mut() && *sender == group.sender {
+        group.events.push(event.clone(), placement);
+    } else {
+        let event_group_state = EventGroupState {
+            sender: sender.clone(),
+            // FIXME: Get display name from ADD_EVENT
+            sender_display_name: RichText::new(sender.as_str().into())
+                .with_attribute(.., Attribute::Weight(FontWeight::SEMI_BOLD)),
+            // FIXME: Put in last group if same sender
+            events: vector![event.clone()],
+        };
+
+        state.timeline.push(event_group_state, placement);
+    }
 }
 
 fn room_header() -> impl Widget<ActiveRoomState> {
@@ -113,7 +142,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     };
                     let event = (room.room_id().into(), room.own_user_id().into(), event_state);
 
-                    if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
+                    if let Err(e) = ui_handle.submit_command(APPEND_EVENT, event, Target::Auto) {
                         error!("{e}");
                     }
 

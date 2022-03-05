@@ -11,7 +11,7 @@ use tracing::{error, info};
 
 use crate::{
     data::{active_room::EventOrTxnId, MinRoomState},
-    ui::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, REMOVE_EVENT},
+    ui::actions::{ADD_OR_UPDATE_ROOM, APPEND_EVENT, REMOVE_EVENT},
 };
 
 pub async fn on_room_create(
@@ -61,7 +61,7 @@ pub async fn on_room_message(
     }
 
     let event = (room.room_id().into(), event.sender.deref().into(), event.into());
-    if let Err(e) = ui_handle.submit_command(ADD_EVENT, event, Target::Auto) {
+    if let Err(e) = ui_handle.submit_command(APPEND_EVENT, event, Target::Auto) {
         error!("{e}");
     }
 }
