@@ -1,17 +1,18 @@
 use druid::{
     im::vector,
     text::{Attribute, RichText},
-    widget::{Button, Controller, Flex, Image, Label, Maybe, Padding, TextBox},
+    widget::{Button, Controller, Flex, Image, Label, Padding, TextBox},
     FontWeight, ImageBuf, Target, Widget, WidgetExt as _,
 };
-use druid_widget_nursery::WidgetExt as _;
+use druid_widget_nursery::{enum_switcher::Switcher, WidgetExt as _};
 use ruma::events::room::message::RoomMessageEventContent;
 use tracing::error;
 
 use super::actions::{ADD_EVENT, REMOVE_EVENT};
 use crate::{
     data::{
-        ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState, JoinedRoomState,
+        ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
+        JoinedRoomState, RoomKindStateInvited, RoomKindStateJoined, RoomKindStateLeft,
     },
     util::TransactionIdArc,
 };
@@ -76,7 +77,10 @@ fn room_header() -> impl Widget<ActiveRoomState> {
 }
 
 fn message_input_area() -> impl Widget<ActiveRoomState> {
-    Maybe::new(active_input_area, || Label::new("invited and left rooms are not yet supported"))
+    Switcher::new()
+        .with_variant(RoomKindStateJoined, active_input_area())
+        .with_variant(RoomKindStateLeft, Label::new("left rooms are not yet supported"))
+        .with_variant(RoomKindStateInvited, Label::new("invited rooms are not yet supported"))
         .lens(ActiveRoomState::kind)
 }
 

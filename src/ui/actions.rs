@@ -1,16 +1,13 @@
 use std::{io::Cursor, sync::Arc};
 
 use druid::{image::io::Reader as ImageReader, ImageBuf, Selector};
-use matrix_sdk::{
-    media::{MediaFormat, MediaThumbnailSize},
-    room::Room,
-};
+use matrix_sdk::media::{MediaFormat, MediaThumbnailSize};
 use ruma::{api::client::media::get_content_thumbnail::v3::Method as ResizeMethod, uint, RoomId};
 use tokio::task;
 use tracing::error;
 
 use crate::{
-    data::{EventOrTxnId, EventState, JoinedRoomState, MinRoomState},
+    data::{EventOrTxnId, EventState, MinRoomState, RoomKindState},
     util::{RoomIdArc, UserIdArc},
 };
 
@@ -28,7 +25,7 @@ pub struct NewActiveRoomState {
     pub id: RoomIdArc,
     pub icon: ImageBuf,
     pub display_name: Arc<str>,
-    pub kind: Option<JoinedRoomState>,
+    pub kind: RoomKindState,
 }
 
 impl NewActiveRoomState {
@@ -56,13 +53,12 @@ impl NewActiveRoomState {
             None => ImageBuf::empty(),
         };
 
-        let kind = match st.room {
-            Room::Joined(room) => Some(JoinedRoomState { message_input: Default::default(), room }),
-            Room::Left(_) => None,
-            Room::Invited(_) => None,
-        };
-
-        Self { id: st.id.clone(), icon, display_name: st.display_name.clone(), kind }
+        Self {
+            id: st.id.clone(),
+            icon,
+            display_name: st.display_name.clone(),
+            kind: st.room.into(),
+        }
     }
 }
 

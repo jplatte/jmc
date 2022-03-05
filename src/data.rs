@@ -70,7 +70,7 @@ pub struct ActiveRoomState {
     pub icon: ImageBuf,
     pub display_name: Arc<str>,
     pub timeline: Vector<EventGroupState>,
-    pub kind: Option<JoinedRoomState>,
+    pub kind: RoomKindState,
 }
 
 impl From<&NewActiveRoomState> for ActiveRoomState {
@@ -114,12 +114,36 @@ impl From<SyncRoomMessageEvent> for EventState {
     }
 }
 
-//#[derive(Clone, druid::Data)]
-//pub enum RoomKindState {
-//    Joined(JoinedRoomState),
-//    Left(LeftRoomState),
-//    Invited(InvitedRoomState),
-//}
+#[derive(Clone, druid::Data, Prism)]
+pub enum RoomKindState {
+    Joined(JoinedRoomState),
+    Left(LeftRoomState),
+    Invited(InvitedRoomState),
+}
+
+impl RoomKindState {
+    fn joined(room: room::Joined) -> Self {
+        Self::Joined(JoinedRoomState { message_input: Default::default(), room })
+    }
+
+    fn left(room: room::Left) -> Self {
+        Self::Left(LeftRoomState { _dummy: (), room })
+    }
+
+    fn invited(room: room::Invited) -> Self {
+        Self::Invited(InvitedRoomState { _dummy: (), room })
+    }
+}
+
+impl From<Room> for RoomKindState {
+    fn from(room: Room) -> Self {
+        match room {
+            Room::Joined(j) => Self::joined(j),
+            Room::Left(l) => Self::left(l),
+            Room::Invited(i) => Self::invited(i),
+        }
+    }
+}
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct JoinedRoomState {
@@ -127,6 +151,24 @@ pub struct JoinedRoomState {
 
     #[data(ignore)]
     pub room: room::Joined,
+}
+
+#[derive(Clone, druid::Data)]
+#[allow(clippy::manual_non_exhaustive)]
+pub struct LeftRoomState {
+    _dummy: (),
+
+    #[data(ignore)]
+    pub room: room::Left,
+}
+
+#[derive(Clone, druid::Data)]
+#[allow(clippy::manual_non_exhaustive)]
+pub struct InvitedRoomState {
+    _dummy: (),
+
+    #[data(ignore)]
+    pub room: room::Invited,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
