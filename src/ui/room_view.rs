@@ -10,7 +10,7 @@ use tracing::error;
 
 use super::actions::{ADD_EVENT, REMOVE_EVENT};
 use crate::{
-    data::{
+    data::active_room::{
         ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
         JoinedRoomState, RoomKindStateInvited, RoomKindStateJoined, RoomKindStateLeft,
     },

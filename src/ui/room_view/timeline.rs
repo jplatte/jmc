@@ -3,7 +3,9 @@ use druid::{
     Color, Widget, WidgetExt,
 };
 
-use crate::data::{ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState};
+use crate::data::active_room::{
+    ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
+};
 
 pub fn timeline() -> druid::widget::SizedBox<ActiveRoomState> {
     Scroll::new(

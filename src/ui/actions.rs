@@ -7,7 +7,10 @@ use tokio::task;
 use tracing::error;
 
 use crate::{
-    data::{EventOrTxnId, EventState, MinRoomState, RoomKindState},
+    data::{
+        active_room::{EventOrTxnId, EventState, RoomKindState},
+        MinRoomState,
+    },
     util::{RoomIdArc, UserIdArc},
 };
 

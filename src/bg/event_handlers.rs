@@ -10,7 +10,7 @@ use ruma::events::room::{
 use tracing::{error, info};
 
 use crate::{
-    data::{EventOrTxnId, MinRoomState},
+    data::{active_room::EventOrTxnId, MinRoomState},
     ui::actions::{ADD_EVENT, ADD_OR_UPDATE_ROOM, REMOVE_EVENT},
 };
 
