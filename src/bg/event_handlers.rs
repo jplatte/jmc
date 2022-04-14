@@ -2,10 +2,12 @@ use std::ops::Deref;
 
 use druid::Target;
 use matrix_sdk::{event_handler::Ctx, room::Room};
-use ruma::events::room::{
-    create::{RoomType, SyncRoomCreateEvent},
-    message::SyncRoomMessageEvent,
-    name::SyncRoomNameEvent,
+use ruma::{
+    events::room::{
+        create::OriginalSyncRoomCreateEvent, message::OriginalSyncRoomMessageEvent,
+        name::OriginalSyncRoomNameEvent,
+    },
+    room::RoomType,
 };
 use tracing::{error, info};
 
@@ -15,7 +17,7 @@ use crate::{
 };
 
 pub async fn on_room_create(
-    event: SyncRoomCreateEvent,
+    event: OriginalSyncRoomCreateEvent,
     room: Room,
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
@@ -36,7 +38,7 @@ pub async fn on_room_create(
 }
 
 pub async fn on_room_name(
-    _event: SyncRoomNameEvent,
+    _event: OriginalSyncRoomNameEvent,
     room: Room,
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {
@@ -48,7 +50,7 @@ pub async fn on_room_name(
 }
 
 pub async fn on_room_message(
-    event: SyncRoomMessageEvent,
+    event: OriginalSyncRoomMessageEvent,
     room: Room,
     Ctx(ui_handle): Ctx<druid::ExtEventSink>,
 ) {

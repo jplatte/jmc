@@ -3,7 +3,7 @@ use std::sync::Arc;
 use druid::{im::Vector, text::RichText, ImageBuf};
 use druid_widget_nursery::prism::Prism;
 use matrix_sdk::room::{self, Room};
-use ruma::events::room::message::SyncRoomMessageEvent;
+use ruma::events::room::message::OriginalSyncRoomMessageEvent;
 
 use crate::{
     ui::actions::NewActiveRoomState,
@@ -61,8 +61,8 @@ pub enum EventTypeState {
     RoomMessage { display_string: Arc<str> },
 }
 
-impl From<SyncRoomMessageEvent> for EventState {
-    fn from(ev: SyncRoomMessageEvent) -> Self {
+impl From<OriginalSyncRoomMessageEvent> for EventState {
+    fn from(ev: OriginalSyncRoomMessageEvent) -> Self {
         Self {
             id: EventOrTxnId::EventId(ev.event_id.into()),
             event_type: EventTypeState::RoomMessage {

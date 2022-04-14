@@ -3,8 +3,9 @@ use std::ops::ControlFlow;
 use anyhow::bail;
 use druid::Target;
 use matrix_sdk::{
-    config::{ClientConfig as MatrixClientConfig, SyncSettings},
-    Client as MatrixClient, Session,
+    config::SyncSettings,
+    store::{make_store_config, OpenStoreError},
+    Client as MatrixClient, ClientBuilder as MatrixClientBuilder, Session,
 };
 use ruma::{
     api::client::{
@@ -161,23 +162,21 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
         }
     };
 
-    let mtx_client =
-        MatrixClient::new_from_user_id_with_config(&user_id, matrix_client_config()).await?;
+    let mtx_client = matrix_client_builder()?.user_id(&user_id).build().await?;
     let response =
         mtx_client.login(user_id.localpart(), &login_data.password, None, Some("jmc")).await?;
 
     Ok((mtx_client, response))
 }
 
-async fn restore_login(session: Session) -> matrix_sdk::Result<MatrixClient> {
-    let mtx_client =
-        MatrixClient::new_from_user_id_with_config(&session.user_id, matrix_client_config())
-            .await?;
+async fn restore_login(session: Session) -> anyhow::Result<MatrixClient> {
+    let mtx_client = matrix_client_builder()?.user_id(&session.user_id).build().await?;
     mtx_client.restore_login(session).await?;
 
     Ok(mtx_client)
 }
 
-fn matrix_client_config() -> MatrixClientConfig {
-    MatrixClientConfig::new().store_path(&*CONFIG_DIR_PATH)
+fn matrix_client_builder() -> Result<MatrixClientBuilder, OpenStoreError> {
+    let store_config = make_store_config(&*CONFIG_DIR_PATH, None)?;
+    Ok(MatrixClient::builder().store_config(store_config))
 }
