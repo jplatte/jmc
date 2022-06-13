@@ -2,7 +2,7 @@ use std::{io::Cursor, sync::Arc};
 
 use druid::{image::io::Reader as ImageReader, ImageBuf, Selector};
 use matrix_sdk::media::{MediaFormat, MediaThumbnailSize};
-use ruma::{api::client::media::get_content_thumbnail::v3::Method as ResizeMethod, uint, RoomId};
+use ruma::{api::client::media::get_content_thumbnail::v3::Method as ResizeMethod, uint};
 use tokio::task;
 use tracing::error;
 
@@ -11,7 +11,7 @@ use crate::{
         active_room::{EventOrTxnId, EventState, RoomKindState},
         MinRoomState,
     },
-    util::{RoomIdArc, UserIdArc},
+    util::{RoomId, UserId},
 };
 
 pub const FINISH_LOGIN: Selector<()> = Selector::new("finish-login");
@@ -20,15 +20,13 @@ pub const ADD_OR_UPDATE_ROOM: Selector<MinRoomState> = Selector::new("add-room")
 
 pub const SET_ACTIVE_ROOM: Selector<NewActiveRoomState> = Selector::new("set-active-room");
 
-pub const APPEND_EVENT: Selector<(Arc<RoomId>, UserIdArc, EventState)> =
-    Selector::new("append-event");
-pub const PREPEND_EVENT: Selector<(Arc<RoomId>, UserIdArc, EventState)> =
-    Selector::new("prepend-event");
+pub const APPEND_EVENT: Selector<(RoomId, UserId, EventState)> = Selector::new("append-event");
+pub const PREPEND_EVENT: Selector<(RoomId, UserId, EventState)> = Selector::new("prepend-event");
 pub const REMOVE_EVENT: Selector<EventOrTxnId> = Selector::new("remove-event");
 // FIXME: Maybe have `REPLACE_EVENT` (instead)?
 
 pub struct NewActiveRoomState {
-    pub id: RoomIdArc,
+    pub id: RoomId,
     pub icon: ImageBuf,
     pub display_name: Arc<str>,
     pub kind: RoomKindState,

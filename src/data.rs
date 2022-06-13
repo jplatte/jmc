@@ -6,7 +6,7 @@ use matrix_sdk::room::Room;
 use tokio::sync::mpsc::Sender;
 use tracing::error;
 
-use crate::util::RoomIdArc;
+use crate::util::RoomId;
 
 pub mod active_room;
 
@@ -31,13 +31,13 @@ pub struct LoginState {
 
 #[derive(Clone, Default, druid::Data, druid::Lens)]
 pub struct UserState {
-    pub rooms: OrdMap<RoomIdArc, MinRoomState>, // For the sidebar
+    pub rooms: OrdMap<RoomId, MinRoomState>, // For the sidebar
     pub active_room: Option<ActiveRoomState>,
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct MinRoomState {
-    pub id: RoomIdArc,
+    pub id: RoomId,
     pub display_name: Arc<str>,
     pub icon: ImageBuf,
 
@@ -49,7 +49,7 @@ impl MinRoomState {
     // FIXME: Don't grab the icon here as this makes the first load of the room list rather slow
     pub async fn new(room: Room) -> Self {
         let display_name = match room.display_name().await {
-            Ok(name) => name.into(),
+            Ok(name) => name.to_string().into(),
             Err(e) => {
                 error!("Failed to compute room display name: {e}");
                 "<error>".into()

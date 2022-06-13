@@ -15,7 +15,7 @@ use crate::{
         ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
         JoinedRoomState, RoomKindStateInvited, RoomKindStateJoined, RoomKindStateLeft,
     },
-    util::TransactionIdArc,
+    util::{RoomId, TransactionId, UserId},
 };
 
 mod timeline;
@@ -72,12 +72,12 @@ impl<T: Clone> VectorExt<T> for Vector<T> {
 
 fn add_event(
     state: &mut ActiveRoomState,
-    room_id: &std::sync::Arc<ruma::RoomId>,
-    sender: &crate::util::UserIdArc,
+    room_id: &RoomId,
+    sender: &UserId,
     event: &EventState,
     placement: Placement,
 ) {
-    if *state.id != *room_id {
+    if *state.id != **room_id {
         return;
     }
 
@@ -134,7 +134,7 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     let msg = RoomMessageEventContent::text_markdown(message_input.as_str());
                     let display_string = msg.body().into();
 
-                    let txn_id = TransactionIdArc::new();
+                    let txn_id = TransactionId::new();
 
                     let event_state = EventState {
                         id: EventOrTxnId::TxnId(txn_id.clone()),

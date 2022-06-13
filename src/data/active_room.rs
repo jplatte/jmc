@@ -7,12 +7,12 @@ use ruma::events::room::message::OriginalSyncRoomMessageEvent;
 
 use crate::{
     ui::actions::NewActiveRoomState,
-    util::{EventIdArc, RoomIdArc, TransactionIdArc, UserIdArc},
+    util::{EventId, RoomId, TransactionId, UserId},
 };
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct ActiveRoomState {
-    pub id: RoomIdArc,
+    pub id: RoomId,
     pub icon: ImageBuf,
     pub display_name: Arc<str>,
     pub timeline: Vector<EventGroupState>,
@@ -45,7 +45,7 @@ impl From<&NewActiveRoomState> for ActiveRoomState {
 
 #[derive(Clone, druid::Data, druid::Lens)]
 pub struct EventGroupState {
-    pub sender: UserIdArc,
+    pub sender: UserId,
     pub sender_display_name: RichText,
     pub events: Vector<EventState>,
 }
@@ -131,6 +131,6 @@ pub struct InvitedRoomState {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
 pub enum EventOrTxnId {
-    EventId(EventIdArc),
-    TxnId(TransactionIdArc),
+    EventId(EventId),
+    TxnId(TransactionId),
 }

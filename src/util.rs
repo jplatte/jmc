@@ -1,15 +1,9 @@
-use std::{fmt, ops::Deref, sync::Arc};
+use std::{fmt, ops::Deref};
 
-use paste::paste;
-use ruma::{EventId, RoomId, TransactionId, UserId};
-
-macro_rules! id_arc {
-    ($inner:ident) => {
-        paste! { id_arc!($inner, [<$inner Arc>]); }
-    };
-    ($inner:ident, $name:ident) => {
+macro_rules! id_type {
+    ($name:ident, $owned:ident) => {
         #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, druid::Data)]
-        pub struct $name(#[data(eq)] Arc<$inner>);
+        pub struct $name(#[data(eq)] ruma::$owned);
 
         impl fmt::Debug for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -24,52 +18,40 @@ macro_rules! id_arc {
         }
 
         impl Deref for $name {
-            type Target = Arc<$inner>;
+            type Target = ruma::$name;
 
             fn deref(&self) -> &Self::Target {
                 &self.0
             }
         }
 
-        impl From<&$inner> for $name {
-            fn from(room_id: &$inner) -> Self {
-                Self(room_id.to_owned().into())
+        impl From<&ruma::$name> for $name {
+            fn from(room_id: &ruma::$name) -> Self {
+                Self(room_id.to_owned())
             }
         }
 
-        impl From<&Box<$inner>> for $name {
-            fn from(room_id: &Box<$inner>) -> Self {
-                Self(room_id.deref().into())
+        impl From<&ruma::$owned> for $name {
+            fn from(room_id: &ruma::$owned) -> Self {
+                Self(room_id.to_owned())
             }
         }
 
-        impl From<Box<$inner>> for $name {
-            fn from(room_id: Box<$inner>) -> Self {
-                Self(room_id.into())
-            }
-        }
-
-        impl From<Arc<$inner>> for $name {
-            fn from(arc: Arc<$inner>) -> Self {
-                Self(arc)
-            }
-        }
-
-        impl From<&Arc<$inner>> for $name {
-            fn from(arc: &Arc<$inner>) -> Self {
-                Self(arc.clone())
+        impl From<ruma::$owned> for $name {
+            fn from(room_id: ruma::$owned) -> Self {
+                Self(room_id)
             }
         }
     };
 }
 
-id_arc!(EventId);
-id_arc!(RoomId);
-id_arc!(TransactionId);
-id_arc!(UserId);
+id_type!(EventId, OwnedEventId);
+id_type!(RoomId, OwnedRoomId);
+id_type!(TransactionId, OwnedTransactionId);
+id_type!(UserId, OwnedUserId);
 
-impl TransactionIdArc {
+impl TransactionId {
     pub fn new() -> Self {
-        TransactionId::new().into()
+        ruma::TransactionId::new().into()
     }
 }
