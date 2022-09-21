@@ -79,6 +79,7 @@ async fn logged_out_main(login_rx: &mut Receiver<LoginState>) -> ControlFlow<(),
                 access_token: login_response.access_token,
                 user_id: login_response.user_id,
                 device_id: login_response.device_id,
+                refresh_token: login_response.refresh_token,
             };
             let config = Config { session: Some(session) };
 
@@ -138,14 +139,10 @@ async fn logged_in_main(
     });
     let filter_id = mtx_client.get_or_upload_filter("jmc_sync", filter).await.unwrap();
 
-    mtx_client
-        .register_event_handler_context(ui_handle.clone())
-        .register_event_handler(event_handlers::on_room_create)
-        .await
-        .register_event_handler(event_handlers::on_room_name)
-        .await
-        .register_event_handler(event_handlers::on_room_message)
-        .await;
+    mtx_client.add_event_handler_context(ui_handle.clone());
+    mtx_client.add_event_handler(event_handlers::on_room_create);
+    mtx_client.add_event_handler(event_handlers::on_room_name);
+    mtx_client.add_event_handler(event_handlers::on_room_message);
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));
     mtx_client.sync(sync_settings).await;
@@ -162,15 +159,19 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
         }
     };
 
-    let mtx_client = matrix_client_builder()?.user_id(&user_id).build().await?;
-    let response =
-        mtx_client.login(user_id.localpart(), &login_data.password, None, Some("jmc")).await?;
+    let mtx_client = matrix_client_builder()?.server_name(user_id.server_name()).build().await?;
+    let response = mtx_client
+        .login_username(user_id.localpart(), &login_data.password)
+        .initial_device_display_name("jmc")
+        .send()
+        .await?;
 
     Ok((mtx_client, response))
 }
 
 async fn restore_login(session: Session) -> anyhow::Result<MatrixClient> {
-    let mtx_client = matrix_client_builder()?.user_id(&session.user_id).build().await?;
+    let mtx_client =
+        matrix_client_builder()?.server_name(session.user_id.server_name()).build().await?;
     mtx_client.restore_login(session).await?;
 
     Ok(mtx_client)

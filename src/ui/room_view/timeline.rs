@@ -5,7 +5,7 @@ use druid::{
     Color, Target, Widget, WidgetExt,
 };
 use ruma::events::{
-    room::message::SyncRoomMessageEvent, AnySyncMessageLikeEvent, AnySyncRoomEvent,
+    room::message::SyncRoomMessageEvent, AnySyncMessageLikeEvent, AnySyncTimelineEvent,
 };
 use tokio_stream::StreamExt;
 use tracing::error;
@@ -93,9 +93,9 @@ where
 
             while let Some(event) = stream.try_next().await.unwrap() {
                 let event = match event.event.deserialize() {
-                    Ok(AnySyncRoomEvent::MessageLike(AnySyncMessageLikeEvent::RoomMessage(
-                        SyncRoomMessageEvent::Original(ev),
-                    ))) => ev,
+                    Ok(AnySyncTimelineEvent::MessageLike(
+                        AnySyncMessageLikeEvent::RoomMessage(SyncRoomMessageEvent::Original(ev)),
+                    )) => ev,
                     _ => continue,
                 };
 
