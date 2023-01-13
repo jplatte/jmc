@@ -28,7 +28,7 @@ fn make_room_item() -> impl Widget<MinRoomState> {
             let ui_handle = ctx.get_external_handle();
             let state = state.clone();
             tokio::spawn(async move {
-                let state = NewActiveRoomState::new(state).await;
+                let state = NewActiveRoomState::new(state, ui_handle.clone()).await;
                 if let Err(e) = ui_handle.submit_command(SET_ACTIVE_ROOM, state, Target::Auto) {
                     error!("{e}");
                 }

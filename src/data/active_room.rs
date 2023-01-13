@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use druid::{im::Vector, text::RichText, ImageBuf};
 use druid_widget_nursery::prism::Prism;
-use matrix_sdk::room::{self, Room};
+use matrix_sdk::{
+    room::{self, timeline::Timeline, Room},
+    ruma,
+};
 use ruma::events::room::message::OriginalSyncRoomMessageEvent;
 
 use crate::{
@@ -15,9 +18,12 @@ pub struct ActiveRoomState {
     pub id: RoomId,
     pub icon: ImageBuf,
     pub display_name: Arc<str>,
-    pub timeline: Vector<EventGroupState>,
+    pub timeline: Vector<EventState>,
     pub kind: RoomKindState,
     pub show_spinner: bool,
+
+    #[data(ignore)]
+    pub sdk_timeline: Arc<Timeline>,
 }
 
 impl ActiveRoomState {
@@ -39,20 +45,16 @@ impl From<&NewActiveRoomState> for ActiveRoomState {
             timeline: Vector::new(),
             kind: new.kind.clone(),
             show_spinner: false,
+            sdk_timeline: new.sdk_timeline.clone(),
         }
     }
 }
 
 #[derive(Clone, druid::Data, druid::Lens)]
-pub struct EventGroupState {
-    pub sender: UserId,
-    pub sender_display_name: RichText,
-    pub events: Vector<EventState>,
-}
-
-#[derive(Clone, druid::Data, druid::Lens)]
 pub struct EventState {
     pub id: EventOrTxnId,
+    pub sender: UserId,
+    pub sender_display_name: RichText,
     pub event_type: EventTypeState,
 }
 

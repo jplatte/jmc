@@ -1,20 +1,12 @@
-use std::ops::Deref;
-
 use druid::{
     widget::{Axis, Controller, Either, Flex, Label, List, RawLabel, Scroll, SizedBox, Spinner},
-    Color, Target, Widget, WidgetExt,
+    Color, Widget, WidgetExt,
 };
-use ruma::events::{
-    room::message::SyncRoomMessageEvent, AnySyncMessageLikeEvent, AnySyncTimelineEvent,
-};
-use tokio_stream::StreamExt;
+use matrix_sdk::room::timeline::PaginationOptions;
 use tracing::error;
 
-use crate::{
-    data::active_room::{
-        ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
-    },
-    ui::actions::PREPEND_EVENT,
+use crate::data::active_room::{
+    ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
 };
 
 pub fn timeline() -> SizedBox<ActiveRoomState> {
@@ -78,36 +70,12 @@ where
             return;
         }
 
-        // fetch room state
-        data.show_spinner = true;
-
-        let room = data.room().to_owned();
-        let ui_handle = ctx.get_external_handle();
-
+        let sdk_timeline = data.sdk_timeline.clone();
         tokio::spawn(async move {
-            // TODO: Store the stream in ActiveRoomState, this is just a hack to see that
-            //       things generally work
-            let mut stream = Box::pin(room.timeline_backward().await.unwrap());
-
-            let mut max_remaining = 40;
-
-            while let Some(event) = stream.try_next().await.unwrap() {
-                let event = match event.event.deserialize() {
-                    Ok(AnySyncTimelineEvent::MessageLike(
-                        AnySyncMessageLikeEvent::RoomMessage(SyncRoomMessageEvent::Original(ev)),
-                    )) => ev,
-                    _ => continue,
-                };
-
-                let event = (room.room_id().into(), event.sender.deref().into(), event.into());
-                if let Err(e) = ui_handle.submit_command(PREPEND_EVENT, event, Target::Auto) {
-                    error!("{e}");
-                }
-
-                max_remaining -= 1;
-                if max_remaining == 0 {
-                    break;
-                }
+            if let Err(e) =
+                sdk_timeline.paginate_backwards(PaginationOptions::single_request(25)).await
+            {
+                error!("{e}");
             }
         });
     }

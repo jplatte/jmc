@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use druid::{
     im::{vector, Vector},
     text::{Attribute, RichText},
@@ -6,16 +8,18 @@ use druid::{
 };
 use druid_widget_nursery::{enum_switcher::Switcher, WidgetExt as _};
 use extension_trait::extension_trait;
+use futures_signals::signal_vec::VecDiff;
+use matrix_sdk::{room::timeline::TimelineItem, ruma};
 use ruma::events::room::message::RoomMessageEventContent;
 use tracing::error;
 
-use super::actions::{APPEND_EVENT, PREPEND_EVENT, REMOVE_EVENT};
+use super::actions::APPLY_TIMELINE_DIFF;
 use crate::{
     data::active_room::{
         ActiveRoomState, EventGroupState, EventOrTxnId, EventState, EventTypeState,
         JoinedRoomState, RoomKindStateInvited, RoomKindStateJoined, RoomKindStateLeft,
     },
-    util::{RoomId, TransactionId, UserId},
+    util::{RoomId, TransactionId},
 };
 
 mod timeline;
@@ -27,31 +31,8 @@ pub fn room_view() -> impl Widget<ActiveRoomState> {
         .with_child(room_header())
         .with_flex_child(timeline(), 1.0)
         .with_child(message_input_area())
-        .on_command(APPEND_EVENT, |_ctx, (room_id, sender, event), state| {
-            add_event(state, room_id, sender, event, Placement::Back)
-        })
-        .on_command(PREPEND_EVENT, |_ctx, (room_id, sender, event), state| {
-            add_event(state, room_id, sender, event, Placement::Front)
-        })
-        .on_command(REMOVE_EVENT, |_ctx, id, state| {
-            let evt_group_evt_idx = state.timeline.iter().enumerate().find_map(|(idx1, group)| {
-                let idx2 = group.events.iter().position(|ev| ev.id == *id)?;
-                Some((idx1, idx2))
-            });
-
-            if let Some((group_idx, evt_idx)) = evt_group_evt_idx {
-                let events = &mut state.timeline[group_idx].events;
-
-                if events.len() == 1 {
-                    // If this is the only event, remove the whole group.
-                    state.timeline.remove(group_idx);
-                } else {
-                    // Otherwise, keep the group (only remove the event from it).
-                    events.remove(evt_idx);
-                }
-            } else {
-                error!("Can't remove event {id:?}");
-            }
+        .on_command(APPLY_TIMELINE_DIFF, |_ctx, (room_id, diff), state| {
+            apply_timeline_diff(state, room_id, diff)
         })
 }
 
@@ -70,18 +51,47 @@ impl<T: Clone> VectorExt<T> for Vector<T> {
     }
 }
 
-fn add_event(
+fn apply_timeline_diff(
     state: &mut ActiveRoomState,
     room_id: &RoomId,
-    sender: &UserId,
-    event: &EventState,
-    placement: Placement,
+    diff: &VecDiff<Arc<TimelineItem>>,
 ) {
     if *state.id != **room_id {
         return;
     }
 
-    if let Some(group) = state.timeline.back_mut() && *sender == group.sender {
+    match diff {
+        VecDiff::Replace { values } => {}
+        VecDiff::InsertAt { index, value } => todo!(),
+        VecDiff::UpdateAt { index, value } => todo!(),
+        VecDiff::RemoveAt { index } => todo!(),
+        VecDiff::Move { old_index, new_index } => todo!(),
+        VecDiff::Push { value } => todo!(),
+        VecDiff::Pop {} => todo!(),
+        VecDiff::Clear {} => todo!(),
+    }
+
+    /*
+    let evt_group_evt_idx = state.timeline.iter().enumerate().find_map(|(idx1, group)| {
+        let idx2 = group.events.iter().position(|ev| ev.id == *id)?;
+        Some((idx1, idx2))
+    });
+
+    if let Some((group_idx, evt_idx)) = evt_group_evt_idx {
+        let events = &mut state.timeline[group_idx].events;
+
+        if events.len() == 1 {
+            // If this is the only event, remove the whole group.
+            state.timeline.remove(group_idx);
+        } else {
+            // Otherwise, keep the group (only remove the event from it).
+            events.remove(evt_idx);
+        }
+    } else {
+        error!("Can't remove event {id:?}");
+    } */
+
+    /* if let Some(group) = state.timeline.back_mut() && *sender == group.sender {
         group.events.push(event.clone(), placement);
     } else {
         let event_group_state = EventGroupState {
@@ -94,7 +104,7 @@ fn add_event(
         };
 
         state.timeline.push(event_group_state, placement);
-    }
+    } */
 }
 
 fn room_header() -> impl Widget<ActiveRoomState> {
@@ -142,7 +152,9 @@ fn active_input_area() -> impl Widget<JoinedRoomState> {
                     };
                     let event = (room.room_id().into(), room.own_user_id().into(), event_state);
 
-                    if let Err(e) = ui_handle.submit_command(APPEND_EVENT, event, Target::Auto) {
+                    if let Err(e) =
+                        ui_handle.submit_command(APPLY_TIMELINE_DIFF, event, Target::Auto)
+                    {
                         error!("{e}");
                     }
 

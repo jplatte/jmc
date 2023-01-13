@@ -2,11 +2,7 @@ use std::ops::ControlFlow;
 
 use anyhow::bail;
 use druid::Target;
-use matrix_sdk::{
-    config::SyncSettings,
-    store::{make_store_config, OpenStoreError},
-    Client as MatrixClient, ClientBuilder as MatrixClientBuilder, Session,
-};
+use matrix_sdk::{config::SyncSettings, ruma, Client as MatrixClient, Session};
 use ruma::{
     api::client::{
         filter::{FilterDefinition, LazyLoadOptions, RoomEventFilter, RoomFilter},
@@ -142,9 +138,8 @@ async fn logged_in_main(
     mtx_client.add_event_handler_context(ui_handle.clone());
     mtx_client.add_event_handler(event_handlers::on_room_create);
     mtx_client.add_event_handler(event_handlers::on_room_name);
-    mtx_client.add_event_handler(event_handlers::on_room_message);
 
-    let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));
+    let sync_settings = SyncSettings::new().filter(Filter::FilterId(filter_id));
     mtx_client.sync(sync_settings).await;
 
     ControlFlow::Break(())
@@ -159,7 +154,11 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
         }
     };
 
-    let mtx_client = matrix_client_builder()?.server_name(user_id.server_name()).build().await?;
+    let mtx_client = MatrixClient::builder()
+        .sled_store(&*CONFIG_DIR_PATH, None)
+        .server_name(user_id.server_name())
+        .build()
+        .await?;
     let response = mtx_client
         .login_username(user_id.localpart(), &login_data.password)
         .initial_device_display_name("jmc")
@@ -170,14 +169,12 @@ async fn login(login_data: LoginState) -> anyhow::Result<(MatrixClient, LoginRes
 }
 
 async fn restore_login(session: Session) -> anyhow::Result<MatrixClient> {
-    let mtx_client =
-        matrix_client_builder()?.server_name(session.user_id.server_name()).build().await?;
-    mtx_client.restore_login(session).await?;
+    let mtx_client = MatrixClient::builder()
+        .sled_store(&*CONFIG_DIR_PATH, None)
+        .server_name(session.user_id.server_name())
+        .build()
+        .await?;
+    mtx_client.restore_session(session).await?;
 
     Ok(mtx_client)
-}
-
-fn matrix_client_builder() -> Result<MatrixClientBuilder, OpenStoreError> {
-    let store_config = make_store_config(&*CONFIG_DIR_PATH, None)?;
-    Ok(MatrixClient::builder().store_config(store_config))
 }

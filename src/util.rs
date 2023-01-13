@@ -1,3 +1,4 @@
+use matrix_sdk::ruma;
 use std::{fmt, ops::Deref};
 
 macro_rules! id_type {
