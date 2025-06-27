@@ -36,7 +36,9 @@ fn login_screen() -> impl Widget<LoginState> {
             .with_child(Align::left(Label::new("Login").with_text_size(24.0)))
             .with_child(TextBox::new().with_placeholder("User ID").lens(LoginState::user_id))
             .with_child(
-                TextBox::protected().with_placeholder("Password").lens(LoginState::password),
+                // temporarily a regular friggin text box to get this thing to compile at all
+                // druid will be replaced xilem soon (or this project will be archived)
+                TextBox::new().with_placeholder("Password").lens(LoginState::password),
             )
             .with_child(Button::new("Log in").on_click(|_, state: &mut LoginState, env| {
                 let send_res = env.get(LOGIN_TX).try_send(state.to_owned());
