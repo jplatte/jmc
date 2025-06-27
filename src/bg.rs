@@ -145,7 +145,9 @@ async fn logged_in_main(
     mtx_client.add_event_handler(event_handlers::on_room_message);
 
     let sync_settings = SyncSettings::new().filter(Filter::FilterId(&filter_id));
-    mtx_client.sync(sync_settings).await;
+    if let Err(e) = mtx_client.sync(sync_settings).await {
+        error!("sync failed: {e}");
+    }
 
     ControlFlow::Break(())
 }

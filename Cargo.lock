@@ -1834,7 +1834,8 @@ dependencies = [
 [[package]]
 name = "indexed_db_futures"
 version = "0.2.3"
-source = "git+https://github.com/Hywan/rust-indexed-db?branch=feat-factory-nodejs#5dab67890cea0ab88b967031adc09179a537d77c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d26ac735f676c52305becf53264b91cea9866a8de61ccbf464405b377b9cbca9"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -2085,8 +2086,9 @@ checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
 name = "matrix-sdk"
-version = "0.5.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbeafb4809f33f377165f2fbcf10e0613053ad206762194c3050a727fd3abcb2"
 dependencies = [
  "anymap2",
  "async-once-cell",
@@ -2097,7 +2099,6 @@ dependencies = [
  "dashmap",
  "derive_builder",
  "event-listener",
- "futures-channel",
  "futures-core",
  "futures-signals",
  "futures-util",
@@ -2121,8 +2122,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-base"
-version = "0.5.1"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b944f6d1fc8779ba790dd0b942ceff45c626c1f5da847f01122d355ad06511bd"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2145,8 +2147,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-common"
-version = "0.5.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b85a6a743cc9dcf9385e61a26db78276078beddd27f3762d9d82baa2030695f1"
 dependencies = [
  "async-lock",
  "futures-core",
@@ -2161,8 +2164,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-crypto"
-version = "0.5.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68fa699e8dd54578a4b92e3fcd18a50da8e415a0c042da1706b0330fc2d8f949"
 dependencies = [
  "aes",
  "async-trait",
@@ -2190,8 +2194,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-indexeddb"
-version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7847d36bba832bc787214323bc042b71dca7fdf2aee9f0e3eb573b64f2f7eb7f"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2216,8 +2221,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-sled"
-version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ded5a703ad8a82b8edfde808228711315c8761a5fbf7ac2b98ab4951dadd066"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2241,8 +2247,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-sdk-store-encryption"
-version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#c0ebeee7307f10151828a96c1e07f7901442b618"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ddee75c3cca58f3a323283dc4e849d19d52988903f907ed0fb53dcad5d6fd25"
 dependencies = [
  "blake3",
  "chacha20poly1305",
