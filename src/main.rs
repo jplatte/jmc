@@ -1,21 +1,12 @@
-#![feature(let_chains)]
+use std::time::Duration;
 
-use std::{sync::Arc, time::Duration};
+use tokio::runtime::Runtime;
 
-use druid::{AppLauncher, PlatformError, WindowDesc};
-use tokio::{runtime::Runtime, sync::mpsc};
-
-mod bg;
 mod config;
-mod data;
-mod ui;
-mod util;
 
-use data::{AppState, LOGIN_TX};
-
-fn main() -> Result<(), PlatformError> {
+fn main() {
     tracing_subscriber::fmt::init();
-    let config = config::load()?;
+    let _config = config::load().unwrap();
 
     // Create a runtime and have it register its threadlocal magic.
     // The main thread will not block on a future like in most async
@@ -23,23 +14,8 @@ fn main() -> Result<(), PlatformError> {
     let rt = Runtime::new().unwrap();
     let _guard = rt.enter();
 
-    let (login_tx, login_rx) = mpsc::channel(1);
-
-    let login_tx = Arc::new(login_tx);
-    let launcher = AppLauncher::with_window(WindowDesc::new(ui::build_ui()))
-        .configure_env(move |env, _state| env.set(LOGIN_TX, login_tx.clone()));
-    let event_sink = launcher.get_external_handle();
-
-    let initial_state = if config.session.is_some() {
-        AppState::LoggingIn
-    } else {
-        AppState::Login(Default::default())
-    };
-
-    tokio::spawn(bg::main(config, login_rx, event_sink));
-    launcher.launch(initial_state)?;
+    // launch the ui?
 
     // After the GUI is closed, shut down all pending async tasks.
     rt.shutdown_timeout(Duration::from_secs(5));
-    Ok(())
 }
